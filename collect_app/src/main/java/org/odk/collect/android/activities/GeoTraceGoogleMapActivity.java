@@ -96,6 +96,7 @@ public class GeoTraceGoogleMapActivity extends FragmentActivity implements Locat
     private Boolean gpsOn = false;
     private Boolean networkOn = false;
     private Location curLocation;
+    private ArrayList<Location> locationArray = new ArrayList<>();
     private LatLng curlatLng;
     private PolylineOptions polylineOptions;
     private Polyline polyline;
@@ -404,6 +405,19 @@ public class GeoTraceGoogleMapActivity extends FragmentActivity implements Locat
     }
 
     private String generateReturnString() {
+        if (true) {
+            String result = "";
+            for (Location loc : locationArray) {
+                result += loc.getTime() + ": "
+                    + loc.getLatitude() + " "
+                    + loc.getLongitude() + " "
+                    + loc.getAltitude() + " "
+                    + loc.getProvider() + " "
+                    + loc.getAccuracy() + ";\n";
+            }
+            return result;
+        }
+
         String tempString = "";
         for (int i = 0; i < markerArray.size(); i++) {
             String lat = Double.toString(markerArray.get(i).getPosition().latitude);
@@ -614,6 +628,7 @@ public class GeoTraceGoogleMapActivity extends FragmentActivity implements Locat
             // avoid app crash
             return;
         }
+        locationArray.add(curLocation);
         LatLng latLng = new LatLng(curLocation.getLatitude(), curLocation.getLongitude());
         MarkerOptions markerOptions = new MarkerOptions().position(latLng).draggable(true);
         Marker marker = map.addMarker(markerOptions);

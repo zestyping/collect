@@ -178,6 +178,7 @@ public class GeoTraceWidget extends QuestionWidget implements IBinaryWidget {
             return null;
         } else {
             try {
+                /*
                 for (String sa :  s.split(";")) {
                     String[] sp = sa.trim().split(" ");
                     double[] gp = new double[4];
@@ -186,6 +187,7 @@ public class GeoTraceWidget extends QuestionWidget implements IBinaryWidget {
                     gp[2] = Double.valueOf(sp[2]);
                     gp[3] = Double.valueOf(sp[3]);
                 }
+                */
                 return new StringData(s);
             } catch (NumberFormatException e) {
                 Timber.e(e);
