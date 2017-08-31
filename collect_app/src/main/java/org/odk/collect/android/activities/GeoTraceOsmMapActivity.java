@@ -63,7 +63,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         LocationListener {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture schedulerHandler;
-    public int zoomLevel = 3;
+    public int zoomLevelWithoutFix = 3;
+    public int zoomLevelWithFix = 19;
+    public int maxZoomLevel = 22;
     public Boolean gpsStatus = true;
     private Boolean playCheck = false;
     private MapView mapView;
@@ -109,7 +111,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         helper = new MapHelper(this, mapView, GeoTraceOsmMapActivity.this);
         mapView.setMultiTouchControls(true);
         mapView.setBuiltInZoomControls(true);
-        mapView.getController().setZoom(zoomLevel);
+        mapView.getController().setZoom(zoomLevelWithoutFix);
         myLocationOverlay = new MyLocationNewOverlay(mapView);
 
         inflater = this.getLayoutInflater();
@@ -473,14 +475,11 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void zoomToMyLocation() {
         if (myLocationOverlay.getMyLocation() != null) {
-            if (zoomLevel == 3) {
-                mapView.getController().setZoom(15);
-            } else {
-                mapView.getController().setZoom(zoomLevel);
-            }
+            mapView.setMaxZoomLevel(maxZoomLevel);
+            mapView.getController().setZoom(zoomLevelWithFix);
             mapView.getController().setCenter(myLocationOverlay.getMyLocation());
         } else {
-            mapView.getController().setZoom(zoomLevel);
+            mapView.getController().setZoom(zoomLevelWithoutFix);
         }
 
     }
