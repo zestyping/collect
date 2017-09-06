@@ -34,7 +34,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +45,8 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import org.javarosa.core.model.data.GeoTraceData;
+import org.javarosa.core.model.data.UncastData;
 import org.javarosa.core.services.Logger;
 import org.odk.collect.android.R;
 import org.odk.collect.android.spatial.MapHelper;
@@ -60,7 +61,6 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -112,7 +112,6 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Boolean gpsOn = false;
     private Boolean networkOn = false;
 
-    private final String GPS_PROVIDER = "gps";
     private final int TRACE_MODE_MANUAL = 0;
     private final int TRACE_MODE_AUTO = 1;
     private final int ZOOM_LEVEL_NO_GPS_FIX = 3;
@@ -397,40 +396,26 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         }, 0, intervalSeconds, TimeUnit.SECONDS);
     }
 
-    public void initializeTraceFromIntent(String wkt) {
-        int left = wkt.indexOf("(");
-        int right = wkt.lastIndexOf(")");
-        if (left < 0 || right < 0) return;
+    public void initializeTraceFromIntent(String data) {
+        GeoTraceData trace = new GeoTraceData();
+        try {
+            trace = trace.cast(new UncastData(data));
+        } catch (IllegalArgumentException e) {
+            Logger.exception("Could not parse GeoTrace from: " + data, e);
+            return;
+        }
 
-        List<GeoPoint> points = new ArrayList<>();
-        for (String element : wkt.substring(left + 1, right).split(",")) {
-            String[] values = element.trim().split("\\s+");
-            double lon, lat, alt;
-            float accuracy;
-            try {
-                lon = Double.parseDouble(values[0]);
-                lat = Double.parseDouble(values[1]);
-                alt = Double.parseDouble(values[2]);
-                accuracy = Float.parseFloat(values[3]);
-            } catch (Exception e) {
-                Logger.exception("Ignoring bad point \"" + element + "\"", e);
-                continue;
-            }
-
-            Location loc = new Location(GPS_PROVIDER);
-            loc.setLatitude(lat);
-            loc.setLongitude(lon);
-            loc.setAltitude(alt);
-            loc.setAccuracy(accuracy);
-            locations.add(loc);
-
-            GeoPoint point = new GeoPoint(lat, lon);
-            point.setAltitude(alt);
-            points.add(point);
+        for (double[] point : ((GeoTraceData.GeoTrace) trace.getValue()).points) {
+            Location location = new Location(LocationManager.GPS_PROVIDER);
+            location.setLatitude(point[0]);
+            location.setLongitude(point[1]);
+            location.setAltitude(point[2]);
+            location.setAccuracy((float) point[3]);
+            locations.add(location);
 
             Marker marker = new Marker(mapView);
-            marker.setSubDescription("" + accuracy);
-            marker.setPosition(point);
+            marker.setSubDescription("" + location.getAccuracy());
+            marker.setPosition(new GeoPoint(location));
             marker.setOnMarkerClickListener(nullMarkerListener);
             marker.setDraggable(true);
             marker.setOnMarkerDragListener(dragListener);
@@ -439,7 +424,10 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             mapMarkers.add(marker);
             mapView.getOverlays().add(marker);
         }
-        polyline.setPoints(points);
+
+        List<GeoPoint> geoPoints = new ArrayList<>();
+        for (Location location : locations) geoPoints.add(new GeoPoint(location));
+        polyline.setPoints(geoPoints);
         mapView.invalidate();
     }
 
@@ -683,7 +671,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
      */
     private void addPointIfAcceptable() {
         Location loc = myLocationOverlay.getLastFix();
-        if (loc != null && GPS_PROVIDER.equals(loc.getProvider()) && loc.getAccuracy() < autoAccuracyMeters) {
+        if (loc != null && LocationManager.GPS_PROVIDER.equals(loc.getProvider()) && loc.getAccuracy() < autoAccuracyMeters) {
             addPoint();
         }
     }
@@ -734,39 +722,21 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     }
 
     private void saveGeoTrace() {
-        returnLocation();
-        finish();
-    }
-
-    private void showPolygonErrorDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(getString(R.string.polygon_validator))
-                .setPositiveButton(getString(R.string.dialog_continue),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // FIRE ZE MISSILES!
-                            }
-                        }).show();
-
-    }
-
-
-    private String generateReturnString() {
-        List<String> elements = new ArrayList<>();
-        for (Location loc : locations) {
-            elements.add(String.format(Locale.ENGLISH, "%.6f %.6f %d %.1f",
-                loc.getLongitude(), loc.getLatitude(), (int) loc.getAltitude(), loc.getAccuracy()));
+        // The result is formatted in the JavaRosa encoding for a DATATYPE_GEOTRACE field.
+        ArrayList<double[]> points = new ArrayList<>();
+        for (Location location : locations) {
+            points.add(new double[] {
+                location.getLatitude(),
+                location.getLongitude(),
+                location.getAltitude(),
+                location.getAccuracy()
+            });
         }
-        return elements.isEmpty() ? "" : "LINESTRING ZM(" + TextUtils.join(", ", elements) + ")";
-    }
+        String result = new GeoTraceData(new GeoTraceData.GeoTrace(points)).getDisplayText();
 
-    private void returnLocation() {
-        String finalReturnString = generateReturnString();
-        Intent i = new Intent();
-        i.putExtra(
-                FormEntryActivity.GEOTRACE_RESULTS,
-                finalReturnString);
-        setResult(RESULT_OK, i);
+        setResult(RESULT_OK,new Intent().putExtra(
+            FormEntryActivity.GEOTRACE_RESULTS, result));
+        finish();
     }
 
     private Marker.OnMarkerClickListener nullMarkerListener = new Marker.OnMarkerClickListener() {
