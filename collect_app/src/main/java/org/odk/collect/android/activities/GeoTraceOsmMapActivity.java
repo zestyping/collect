@@ -190,11 +190,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
             @Override
             public void onClick(View v) {
-                if (mapMarkers.isEmpty()) {
-                    saveGeoTrace();
-                } else {
-                    alertDialog.show();
-                }
+                saveGeoTrace();
             }
         });
 
@@ -273,24 +269,6 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         }
         myLocationOverlay.runOnFirstFix(centerAroundFix);
 
-
-        Button polygonSaveButton = (Button) polygonPolylineView.findViewById(R.id.polygon_save);
-        polygonSaveButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (mapMarkers.size() > 2) {
-                    createPolygon();
-                    alertDialog.dismiss();
-                    saveGeoTrace();
-                } else {
-                    alertDialog.dismiss();
-                    showPolygonErrorDialog();
-                }
-
-
-            }
-        });
         Button polylineSaveButton = (Button) polygonPolylineView.findViewById(R.id.polyline_save);
         polylineSaveButton.setOnClickListener(new View.OnClickListener() {
 
@@ -778,14 +756,6 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             return false;
         }
     };
-
-    private void createPolygon() {
-        mapMarkers.add(mapMarkers.get(0));
-        List<GeoPoint> points = polyline.getPoints();
-        points.add(mapMarkers.get(0).getPosition());
-        polyline.setPoints(points);
-        mapView.invalidate();
-    }
 
     private void updatePolylineFromMarkers() {
         List<GeoPoint> points = new ArrayList<>();
