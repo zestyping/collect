@@ -399,20 +399,21 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     public void setGeoTraceScheduler(long delay, TimeUnit units) {
         autoRecordingInterval = units.toSeconds(delay);
+        // Mark a point now; then the scheduler will fire starting after the
+        // first interval has elapsed.
+        addLocationMarkerIfAcceptable();
         schedulerHandler = scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        addLocationMarker();
+                        addLocationMarkerIfAcceptable();
                     }
                 });
             }
         }, delay, delay, units);
-
     }
-
 
     public void overlayIntentTrace(String str) {
         String s = str.replace("; ", ";");
@@ -694,9 +695,21 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         modeActive = true;
     }
 
-    private void addLocationMarker() {
+    /**
+     * Records the current location as a path point if it's a GPS fix and its
+     * accuracy is good enough.
+     */
+    private void addLocationMarkerIfAcceptable() {
         Location loc = myLocationOverlay.getLastFix();
         if (loc != null && GPS_PROVIDER.equals(loc.getProvider()) && loc.getAccuracy() < MAX_ACCEPTABLE_ACCURACY) {
+            addLocationMarker();
+        }
+    }
+
+    /** Records the current location as a path point. */
+    private void addLocationMarker() {
+        Location loc = myLocationOverlay.getLastFix();
+        if (loc != null) {
             Marker marker = new Marker(mapView);
             marker.setPosition(new GeoPoint(loc));
             marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_place_black_36dp));
