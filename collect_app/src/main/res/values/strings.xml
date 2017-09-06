@@ -325,7 +325,7 @@
     <string name="get_trace">Start GeoTrace</string>
 
     <string name="geoshape_title">GeoShape</string>
-    <string name="select_geotrace_mode">"Select GeoTrace Mode"</string>
+    <string name="select_geotrace_mode">"Select recording mode"</string>
     <string name="start">Start</string>
     <string name="enable_gps">Enable GPS</string>
     <string name="enable_gps_message">"GPS is disabled in your device. Would you like to enable it?"</string>
@@ -348,7 +348,7 @@
     <string name="required_accuracy">Required accuracy:</string>
     <string name="geoshape_instruction">Long press to place marks.</string>
     <string name="geotrace_instruction">Wait for lock, then tap add marker button to start.</string>
-    <string name="geotrace_location_status_searching">Searching for GPS location...</string>
+    <string name="geotrace_location_status_searching">Searching for GPS location, please wait...</string>
     <string name="geotrace_location_status_acceptable">GPS location accuracy: %.1f m (acceptable)</string>
     <string name="geotrace_location_status_unacceptable">GPS location accuracy: %.1f m (unacceptable)</string>
     <string name="geotrace_collection_status_paused">Points recorded: %d (paused)</string>
