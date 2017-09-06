@@ -380,6 +380,17 @@
     <string name="install_openmapkit">Please install OpenMapKit!</string>
     <string name="go_back">Go back</string>
     <string name="download_selected">Download Selected</string>
+    <string name="geopoint_dialog_title">Record a GPS point</string>
+    <string name="geopoint_dialog_searching">Searching for GPS location...</string>
+    <string name="geopoint_dialog_collected_no_points">No points collected yet.</string>
+    <string name="geopoint_dialog_collected_no_acceptable_points">No points have accuracy %.1f or better.</string>
+    <string name="geopoint_dialog_collected_1_point">1 point has accuracy %.1f or better.</string>
+    <string name="geopoint_dialog_collected_n_points">%1$d points have accuracy %.1f or better.</string>
+    <string name="geopoint_dialog_save">Save this point</string>
+    <string name="geopoint_dialog_accuracy">Accuracy:</string>
+    <string name="geopoint_dialog_default_accuracy">5 m</string>
+    <string name="minus_sign">&#x2212;</string>
+    <string name="plus_sign">+</string>
     <string name="record_geopoint">Record a point now</string>
     <string name="gps_result">Latitude: %1$s\nLongitude: %2$s\nAltitude: %3$sm\nAccuracy: %4$sm</string>
     <string name="parser_exception">XPathParser Exception: \"%s\"</string>

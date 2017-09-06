@@ -14,6 +14,7 @@
 
 package org.odk.collect.android.activities;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,12 +26,14 @@ import android.location.LocationProvider;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.view.Window;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.utilities.InfoLogger;
 import org.odk.collect.android.utilities.ToastUtils;
+import org.odk.collect.android.widgets.GeoPointAggregator;
 import org.odk.collect.android.widgets.GeoPointWidget;
 
 import java.text.DecimalFormat;
@@ -47,6 +50,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
     private boolean networkOn = false;
     private double locationAccuracy;
     private int locationCount = 0;
+    private GeoPointAggregator points = new GeoPointAggregator();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,7 +118,8 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
             }
         }
 
-        setupLocationDialog();
+        buildDialog().show();
+        //setupLocationDialog();
     }
 
 
@@ -139,7 +144,6 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
             locationDialog.dismiss();
         }
     }
-
 
     @Override
     protected void onResume() {
@@ -170,12 +174,40 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         super.onStop();
     }
 
+    private AlertDialog buildDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.geopoint_dialog_title));
+        View view = getLayoutInflater().inflate(R.layout.geopoint_dialog, null);
+        builder.setView(view)
+            .setPositiveButton(R.string.geopoint_dialog_save, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    Collect.getInstance().getActivityLogger().logInstanceAction(this,
+                        "acceptLocation", "OK");
+                    dialog.cancel();
+                    returnLocation();
+                }
+            })
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    Collect.getInstance().getActivityLogger().logInstanceAction(this,
+                        "cancelLocation", "cancel");
+                    location = null;
+                    dialog.cancel();
+                    finish();
+                }
+            })
+            .setCancelable(false);  // back button doesn't cancel
+        return builder.create();
+    }
+
     /**
      * Sets up the look and actions for the progress dialog while the GPS is searching.
      */
     private void setupLocationDialog() {
         Collect.getInstance().getActivityLogger().logInstanceAction(this, "setupLocationDialog",
                 "show");
+
         // dialog displayed while fetching gps location
         locationDialog = new ProgressDialog(this);
         DialogInterface.OnClickListener geoPointButtonListener =
@@ -228,6 +260,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
     @Override
     public void onLocationChanged(Location location) {
         this.location = location;
+        if (true) return;
         if (this.location != null) {
             // Bug report: cached GeoPoint is being returned as the first value.
             // Wait for the 2nd value to be returned, which is hopefully not cached?

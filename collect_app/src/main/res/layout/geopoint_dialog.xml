@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal"
+              android:paddingLeft="30dp"
+              android:paddingTop="12dp">
+
+  <ProgressBar
+      android:id="@+id/marker_progress"
+      android:layout_width="50dp"
+      android:layout_height="50dp"
+      android:indeterminate="true"
+      android:paddingRight="18dp"/>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/geopoint_dialog_location_status"
+        android:text="@string/geopoint_dialog_searching"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/geopoint_dialog_accuracy"
+          android:paddingRight="12dp"/>
+
+      <Button
+          android:id="@+id/geopoint_increment_accuracy_threshold"
+          android:layout_width="48dp"
+          android:layout_height="wrap_content"
+          android:textSize="18dp"
+          android:text="@string/minus_sign"/>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/geopoint_dialog_default_accuracy"/>
+
+      <Button
+          android:id="@+id/geopoint_decrement_accuracy_threshold"
+          android:layout_width="48dp"
+          android:layout_height="wrap_content"
+          android:textSize="18dp"
+          android:text="@string/plus_sign"/>
+        </LinearLayout>
+
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/geopoint_dialog_collection_status"
+      android:text="@string/geopoint_dialog_collected_no_points"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"/>
+
+</LinearLayout>
