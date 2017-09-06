@@ -72,6 +72,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     public MyLocationNewOverlay myLocationOverlay;
     private ImageButton locationButton;
     private ImageButton playButton;
+    private ImageButton backspaceButton;
     public ImageButton layersButton;
     public ImageButton clearButton;
     private Button manualCaptureButton;
@@ -140,6 +141,15 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                 zoomToMyLocation();
             }
 
+        });
+
+        backspaceButton = (ImageButton) findViewById(R.id.backspace);
+        backspaceButton.setEnabled(false);
+        backspaceButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                removeLastPoint();
+            }
         });
 
         clearButton = (ImageButton) findViewById(R.id.clear);
@@ -662,7 +672,24 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             points.add(marker.getPosition());
             polyline.setPoints(points);
             mapView.invalidate();
+
+            backspaceButton.setEnabled(true);
         }
+    }
+
+    private void removeLastPoint() {
+        List<GeoPoint> points = polyline.getPoints();
+        if (mapMarkers.isEmpty() || points.isEmpty()) return;
+
+        Marker marker = mapMarkers.get(mapMarkers.size() - 1);
+        marker.remove(mapView);
+
+        mapMarkers.remove(mapMarkers.size() - 1);
+        points.remove(points.size() - 1);
+        polyline.setPoints(points);
+        mapView.invalidate();
+
+        if (mapMarkers.isEmpty() || points.isEmpty()) backspaceButton.setEnabled(false);
     }
 
     private void saveGeoTrace() {

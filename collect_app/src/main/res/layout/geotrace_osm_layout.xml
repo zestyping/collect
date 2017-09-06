@@ -6,55 +6,54 @@
     android:background="#BF000000"
     >
 
+<TextView
+    android:id="@+id/geotrace_instruction"
+    android:text="@string/geotrace_instruction"
+    android:textColor="#FFFFFF"
+    android:layout_width="match_parent"
+    android:gravity="center_horizontal"
+    android:layout_height="wrap_content"
+    android:paddingTop="5dip"
+    android:paddingLeft="5dip"
+    android:paddingRight="5dip"
+    android:paddingBottom="5dip"
+    />
 
-    <TextView
-        android:id="@+id/geotrace_instruction"
-        android:text="@string/geotrace_instruction"
-        android:textColor="#FFFFFF"
-        android:layout_width="match_parent"
-        android:gravity="center_horizontal"
-        android:layout_height="wrap_content"
-        android:paddingTop="5dip"
-        android:paddingLeft="5dip"
-        android:paddingRight="5dip"
-        android:paddingBottom="5dip"
+  <org.osmdroid.views.MapView
+      android:id="@+id/geotrace_mapview"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_marginTop="28dip"
+      />
 
-        />
+  <Button
+      android:text="@string/record_geopoint"
+      android:id="@+id/manual_button"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:padding="15dp"
+      android:visibility="gone"
+      android:textStyle="bold"
+      android:layout_marginTop="8dp"
+      android:layout_marginLeft="5dp"
+      android:layout_marginStart="5dp"
+      android:paddingBottom="20dp"
+      android:drawableRight="@drawable/distance"
+      android:drawableEnd="@drawable/distance"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentStart="true"
+      android:layout_toLeftOf="@+id/scroller"
+      android:layout_toStartOf="@+id/scroller"
+      android:layout_below="@+id/geotrace_instruction" />
 
-    <org.osmdroid.views.MapView
-        android:id="@+id/geotrace_mapview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="28dip"
-        />
+  <ScrollView
+      android:id="@+id/scroller"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentRight="true"
+      android:layout_alignParentEnd="true"
+      android:layout_below="@+id/geotrace_instruction">
 
-    <Button
-        android:text="@string/record_geopoint"
-        android:id="@+id/manual_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="15dp"
-        android:visibility="gone"
-        android:textStyle="bold"
-        android:layout_marginTop="8dp"
-        android:layout_marginLeft="5dp"
-        android:layout_marginStart="5dp"
-        android:paddingBottom="20dp"
-        android:drawableRight="@drawable/distance"
-        android:drawableEnd="@drawable/distance"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_toLeftOf="@+id/scroller"
-        android:layout_toStartOf="@+id/scroller"
-        android:layout_below="@+id/geotrace_instruction" />
-
-    <ScrollView
-        android:id="@+id/scroller"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@+id/geotrace_instruction">
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -62,6 +61,14 @@
         android:gravity="end"
         android:paddingTop="0dip"
         android:paddingBottom="60dip">
+
+        <ImageButton
+            android:id="@+id/show_location"
+            android:src="@drawable/ic_my_location_black_36dp"
+            android:padding="15dp"
+            android:layout_margin="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
 
         <ImageButton
             android:id="@+id/play"
@@ -81,14 +88,12 @@
             android:src="@drawable/ic_pause_black_36dp" />
 
         <ImageButton
-            android:id="@+id/show_location"
-            android:src="@drawable/ic_my_location_black_36dp"
+            android:id="@+id/backspace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:padding="15dp"
             android:layout_margin="5dp"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
-
-
+            android:src="@drawable/ic_backspace_arrow_selector" />
 
         <ImageButton
             android:id="@+id/layers"
@@ -98,7 +103,6 @@
             android:layout_margin="5dp"
             android:src="@drawable/ic_layers_black_36dp" />
 
-
         <ImageButton
             android:id="@+id/clear"
             android:layout_width="wrap_content"
@@ -106,6 +110,7 @@
             android:padding="15dp"
             android:layout_margin="5dp"
             android:src="@drawable/ic_delete_black_36dp" />
+
         <ImageButton
             android:id="@+id/geotrace_save"
             android:layout_width="wrap_content"
@@ -113,9 +118,7 @@
             android:padding="15dp"
             android:layout_margin="5dp"
             android:src="@drawable/ic_save_black_36dp" />
+
     </LinearLayout>
-    </ScrollView>
-
-
-
+  </ScrollView>
 </RelativeLayout>
