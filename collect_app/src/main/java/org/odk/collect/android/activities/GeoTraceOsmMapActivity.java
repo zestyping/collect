@@ -405,11 +405,11 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         List<GeoPoint> points = new ArrayList<>();
         for (String element : wkt.substring(left + 1, right).split(",")) {
             String[] values = element.trim().split("\\s+");
-            double lat, lon, alt;
+            double lon, lat, alt;
             float accuracy;
             try {
-                lat = Double.parseDouble(values[0]);
-                lon = Double.parseDouble(values[1]);
+                lon = Double.parseDouble(values[0]);
+                lat = Double.parseDouble(values[1]);
                 alt = Double.parseDouble(values[2]);
                 accuracy = Float.parseFloat(values[3]);
             } catch (Exception e) {
@@ -755,7 +755,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         List<String> elements = new ArrayList<>();
         for (Location loc : locations) {
             elements.add(String.format(Locale.ENGLISH, "%.6f %.6f %d %.1f",
-                loc.getLatitude(), loc.getLongitude(), (int) loc.getAltitude(), loc.getAccuracy()));
+                loc.getLongitude(), loc.getLatitude(), (int) loc.getAltitude(), loc.getAccuracy()));
         }
         return elements.isEmpty() ? "" : "LINESTRING ZM(" + TextUtils.join(", ", elements) + ")";
     }
