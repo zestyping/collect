@@ -61,6 +61,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -406,23 +407,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         }
 
         for (double[] point : ((GeoTraceData.GeoTrace) trace.getValue()).points) {
-            Location location = new Location(LocationManager.GPS_PROVIDER);
-            location.setLatitude(point[0]);
-            location.setLongitude(point[1]);
-            location.setAltitude(point[2]);
-            location.setAccuracy((float) point[3]);
+            Location location = createLocation(point[0], point[1], point[2], (float) point[3]);
             locations.add(location);
-
-            Marker marker = new Marker(mapView);
-            marker.setSubDescription("" + location.getAccuracy());
-            marker.setPosition(new GeoPoint(location));
-            marker.setOnMarkerClickListener(nullMarkerListener);
-            marker.setDraggable(true);
-            marker.setOnMarkerDragListener(dragListener);
-            marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.point_red));
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-            mapMarkers.add(marker);
-            mapView.getOverlays().add(marker);
+            mapMarkers.add(createMapMarker(location));
         }
 
         List<GeoPoint> geoPoints = new ArrayList<>();
@@ -681,26 +668,38 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         Location loc = myLocationOverlay.getLastFix();
         if (loc != null) {
             locations.add(loc);
+            mapMarkers.add(createMapMarker(loc));
 
-            Marker marker = new Marker(mapView);
-            marker.setPosition(new GeoPoint(loc));
-            marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.point_red));
-            marker.setSubDescription(Float.toString(loc.getAccuracy()));
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-            marker.setDraggable(true);
-            marker.setOnMarkerDragListener(dragListener);
-            mapMarkers.add(marker);
-
-            marker.setOnMarkerClickListener(nullMarkerListener);
-            mapView.getOverlays().add(marker);
             List<GeoPoint> points = polyline.getPoints();
-            points.add(marker.getPosition());
+            points.add(new GeoPoint(loc));
             polyline.setPoints(points);
             mapView.invalidate();
 
             backspaceButton.setEnabled(true);
         }
         updateStatusText();
+    }
+
+    private Location createLocation(double lat, double lon, double alt, float accuracy) {
+        Location location = new Location(LocationManager.GPS_PROVIDER);
+        location.setLatitude(lat);
+        location.setLongitude(lon);
+        location.setAltitude(alt);
+        location.setAccuracy(accuracy);
+        return location;
+    }
+
+    private Marker createMapMarker(Location location) {
+        Marker marker = new Marker(mapView);
+        marker.setPosition(new GeoPoint(location));
+        marker.setSubDescription(String.format(Locale.US, "%.1f", location.getAccuracy()));
+        marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.point_red));
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+        marker.setOnMarkerClickListener(nullMarkerListener);
+        marker.setOnMarkerDragListener(dragListener);
+        marker.setDraggable(true);
+        mapView.getOverlays().add(marker);
+        return marker;
     }
 
     private void removeLastPoint() {
