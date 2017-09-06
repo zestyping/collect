@@ -49,9 +49,24 @@
             android:id="@+id/trace_osm_auto_interval"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:entries="@array/interval_names" />
+            android:entries="@array/interval_labels" />
       </LinearLayout>
 
+    <LinearLayout android:orientation="horizontal"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content">
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:paddingLeft="42dp"
+          android:text="@string/required_accuracy" />
+      <Spinner
+          android:id="@+id/trace_osm_auto_accuracy"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:entries="@array/accuracy_labels" />
     </LinearLayout>
+
+  </LinearLayout>
 
 </LinearLayout>

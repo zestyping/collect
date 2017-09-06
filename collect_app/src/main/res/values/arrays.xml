@@ -102,7 +102,7 @@ the specific language governing permissions and limitations under the License. -
         <item>Seconds</item>
         <item>Minutes</item>
     </string-array>
-    <string-array name="interval_names" translatable="false">
+    <string-array name="interval_labels" translatable="false">
         <item>1 second</item>
         <item>5 seconds</item>
         <item>10 seconds</item>
@@ -125,6 +125,20 @@ the specific language governing permissions and limitations under the License. -
         <item>600</item>
         <item>1200</item>
         <item>1800</item>
+    </integer-array>
+    <string-array name="accuracy_labels" translatable="false">
+        <item>3 meters</item>
+        <item>5 meters</item>
+        <item>7 meters</item>
+        <item>10 meters</item>
+        <item>15 meters</item>
+    </string-array>
+    <integer-array name="accuracy_values" translatable="false">
+        <item>3</item>
+        <item>5</item>
+        <item>7</item>
+        <item>10</item>
+        <item>15</item>
     </integer-array>
     <string-array name="autosend_selector_entries">
         <item>@string/off</item>

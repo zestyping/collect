@@ -90,8 +90,10 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private ArrayList<Marker> mapMarkers = new ArrayList<Marker>();
     private Integer traceMode; // 0 manual, 1 is automatic
     private View traceAutoOptions;
-    private long autoIntervalSeconds;
     private Spinner autoInterval;
+    private long autoIntervalSeconds;
+    private Spinner autoAccuracy;
+    private double autoAccuracyMeters;
     private Boolean beenPaused;
     private MapHelper helper;
 
@@ -109,8 +111,6 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private final int ZOOM_LEVEL_NO_GPS_FIX = 3;
     private final int ZOOM_LEVEL_WITH_GPS_FIX = 19;
     private final int MAX_ZOOM_LEVEL = 22;
-
-    private final double MAX_ACCEPTABLE_ACCURACY = 5.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +136,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         polygonPolylineView = inflater.inflate(R.layout.polygon_polyline_dialog, null);
         autoInterval = (Spinner) traceSettingsView.findViewById(R.id.trace_osm_auto_interval);
         autoInterval.setSelection(1);  // default to a 5-second interval
+        autoAccuracy = (Spinner) traceSettingsView.findViewById(R.id.trace_osm_auto_accuracy);
+        autoAccuracy.setSelection(1);  // default to requiring 5-meter accuracy
+        autoAccuracyMeters = 5;
         traceAutoOptions = traceSettingsView.findViewById(R.id.trace_osm_auto_options);
         layersButton = (ImageButton) findViewById(R.id.layers);
         layersButton.setOnClickListener(new View.OnClickListener() {
@@ -518,7 +521,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void updateStatusText() {
         Location loc = myLocationOverlay.getLastFix();
-        boolean usable = loc != null && loc.getAccuracy() < MAX_ACCEPTABLE_ACCURACY;
+        boolean usable = loc != null && loc.getAccuracy() < autoAccuracyMeters;
         locationStatus.setText(loc == null ?
             getString(R.string.geotrace_location_status_searching) :
                 usable ? getString(R.string.geotrace_location_status_acceptable, loc.getAccuracy()) :
@@ -532,7 +535,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         collectionStatus.setText(modeActive ? (
             traceMode == TRACE_MODE_MANUAL ?
                 getString(R.string.geotrace_collection_status_manual, numPoints) :
-                getString(R.string.geotrace_collection_status_auto, numPoints, autoIntervalSeconds)
+                getString(
+                    R.string.geotrace_collection_status_auto, numPoints,
+                    autoIntervalSeconds, (int) autoAccuracyMeters)
         ) : getString(R.string.geotrace_collection_status_paused, numPoints));
     }
 
@@ -667,8 +672,13 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void setupAutomaticMode() {
         manualCaptureButton.setVisibility(View.VISIBLE);
-        TypedArray values = getResources().obtainTypedArray(R.array.interval_values);
-        setGeoTraceScheduler(values.getInt(autoInterval.getSelectedItemPosition(), 1));
+
+        TypedArray intervalValues = getResources().obtainTypedArray(R.array.interval_values);
+        setGeoTraceScheduler(intervalValues.getInt(autoInterval.getSelectedItemPosition(), 1));
+
+        TypedArray accuracyValues = getResources().obtainTypedArray(R.array.accuracy_values);
+        autoAccuracyMeters = accuracyValues.getInt(autoAccuracy.getSelectedItemPosition(), 5);
+
         modeActive = true;
     }
 
@@ -678,7 +688,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
      */
     private void addLocationMarkerIfAcceptable() {
         Location loc = myLocationOverlay.getLastFix();
-        if (loc != null && GPS_PROVIDER.equals(loc.getProvider()) && loc.getAccuracy() < MAX_ACCEPTABLE_ACCURACY) {
+        if (loc != null && GPS_PROVIDER.equals(loc.getProvider()) && loc.getAccuracy() < autoAccuracyMeters) {
             addLocationMarker();
         }
     }
