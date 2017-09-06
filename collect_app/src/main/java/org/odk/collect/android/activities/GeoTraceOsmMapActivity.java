@@ -137,7 +137,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             @Override
             public void onClick(View v) {
                 reset_trace_settings();
-                showZoomDialog();
+                zoomToMyLocation();
             }
 
         });
@@ -466,7 +466,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                 public void run() {
                     locationButton.setEnabled(true);
                     playButton.setEnabled(true);
-                    showZoomDialog();
+                    zoomToMyLocation();
                 }
             });
         }
