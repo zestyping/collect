@@ -341,6 +341,7 @@
     <string name="polygon_validator">Must have at least 3 points to create Polygon</string>
     <string name="dialog_continue">Continue</string>
     <string name="clear">Clear</string>
+    <string name="save">Save</string>
     <string name="polyline_polygon_text">Save GeoTrace As</string>
     <string name="manual_mode">Manual recording</string>
     <string name="automatic_mode">Automatic recording</string>
@@ -390,7 +391,6 @@
         <item quantity="one">Collected 1 acceptable point.</item>
         <item quantity="other">Collected %d acceptable points.</item>
     </plurals>
-    <string name="geopoint_dialog_save">Save this point</string>
     <string name="geopoint_dialog_accuracy">Required accuracy:</string>
     <string name="geopoint_dialog_accuracy_threshold">%.1f m</string>
     <string name="geopoint_dialog_default_accuracy_threshold">5.0 m</string>

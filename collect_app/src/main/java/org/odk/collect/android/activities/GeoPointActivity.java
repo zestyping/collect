@@ -201,13 +201,13 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         });
 
         builder.setView(view)
-            .setPositiveButton(R.string.geopoint_dialog_save, new DialogInterface.OnClickListener() {
+            .setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
                     Collect.getInstance().getActivityLogger().logInstanceAction(
                         this, "acceptLocation", "OK");
                     dialog.cancel();
-                    finishWithLocation();
+                    finishWithLocationResult();
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -222,7 +222,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         return builder.create();
     }
 
-    private void finishWithLocation() {
+    private void finishWithLocationResult() {
         if (points.getNumAcceptablePoints(accuracyThreshold) > 0) {
             setResult(RESULT_OK, new Intent().putExtra(
                 FormEntryActivity.LOCATION_RESULT,
@@ -259,6 +259,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         }
     }
 
+    /** Updates the status information in the dialog to reflect current state. */
     private void updateLabels() {
         accuracyThresholdView.setText(getString(
             R.string.geopoint_dialog_accuracy_threshold, accuracyThreshold));
@@ -269,12 +270,14 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
                 locationStatusView.setText(R.string.geopoint_location_status_searching);
                 break;
             case LocationProvider.AVAILABLE:
-                locationStatusView.setText(getString(
-                    lastLocationAccuracy < accuracyThreshold ?
-                        R.string.geopoint_location_status_acceptable :
-                        R.string.geopoint_location_status_unacceptable,
-                    lastLocationAccuracy
-                ));
+                if (lastLocationAccuracy > 0) {
+                    locationStatusView.setText(getString(
+                        lastLocationAccuracy < accuracyThreshold ?
+                            R.string.geopoint_location_status_acceptable :
+                            R.string.geopoint_location_status_unacceptable,
+                        lastLocationAccuracy
+                    ));
+                }
                 break;
         }
 
