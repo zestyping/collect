@@ -39,10 +39,6 @@ import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.PreferenceKeys;
 import org.odk.collect.android.utilities.PlayServicesUtil;
 
-import java.util.ArrayList;
-
-import timber.log.Timber;
-
 /**
  * GeoShapeTrace is the widget that allows the user to get Collect multiple GPS points based on the
  * locations.
@@ -172,29 +168,8 @@ public class GeoTraceWidget extends QuestionWidget implements IBinaryWidget {
 
     @Override
     public IAnswerData getAnswer() {
-        ArrayList<double[]> list = new ArrayList<double[]>();
         String s = stringAnswer.getText().toString();
-        if (s == null || s.equals("")) {
-            return null;
-        } else {
-            try {
-                /*
-                for (String sa :  s.split(";")) {
-                    String[] sp = sa.trim().split(" ");
-                    double[] gp = new double[4];
-                    gp[0] = Double.valueOf(sp[0]);
-                    gp[1] = Double.valueOf(sp[1]);
-                    gp[2] = Double.valueOf(sp[2]);
-                    gp[3] = Double.valueOf(sp[3]);
-                }
-                */
-                return new StringData(s);
-            } catch (NumberFormatException e) {
-                Timber.e(e);
-                return null;
-            }
-        }
-
+        return s.isEmpty() ? null : new StringData(s);
     }
 
     @Override
