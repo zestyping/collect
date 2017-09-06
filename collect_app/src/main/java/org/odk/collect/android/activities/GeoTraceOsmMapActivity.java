@@ -46,6 +46,7 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import org.javarosa.core.services.Logger;
 import org.odk.collect.android.R;
 import org.odk.collect.android.spatial.MapHelper;
 import org.odk.collect.android.widgets.GeoTraceWidget;
@@ -403,10 +404,17 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         List<GeoPoint> points = new ArrayList<>();
         for (String element : wkt.substring(left + 1, right).split(",")) {
             String[] values = element.trim().split("\\s+");
-            double lat = Double.parseDouble(values[0]);
-            double lon = Double.parseDouble(values[1]);
-            double alt = Double.parseDouble(values[2]);
-            float accuracy = Float.parseFloat(values[3]);
+            double lat, lon, alt;
+            float accuracy;
+            try {
+                lat = Double.parseDouble(values[0]);
+                lon = Double.parseDouble(values[1]);
+                alt = Double.parseDouble(values[2]);
+                accuracy = Float.parseFloat(values[3]);
+            } catch (Exception e) {
+                Logger.exception("Ignoring bad point \"" + element + "\"", e);
+                continue;
+            }
 
             Location loc = new Location(GPS_PROVIDER);
             loc.setLatitude(lat);
@@ -748,7 +756,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             elements.add(String.format(Locale.ENGLISH, "%.6f %.6f %d %.1f",
                 loc.getLatitude(), loc.getLongitude(), (int) loc.getAltitude(), loc.getAccuracy()));
         }
-        return "LINESTRING ZM(" + TextUtils.join(", ", elements) + ")";
+        return elements.isEmpty() ? "" : "LINESTRING ZM(" + TextUtils.join(", ", elements) + ")";
     }
 
     private void returnLocation() {
