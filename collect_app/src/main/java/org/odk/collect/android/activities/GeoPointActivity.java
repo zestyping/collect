@@ -41,7 +41,9 @@ import java.util.List;
 
 public class GeoPointActivity extends AppCompatActivity implements LocationListener {
 
+    // Instance state bundle
     private static final String LOCATION_COUNT = "locationCount";
+    private static final String COLLECTED_POINTS = "collectedPoints";
 
     private AlertDialog dialog;
     private LocationManager locationManager;
@@ -66,6 +68,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
 
         if (savedInstanceState != null) {
             locationCount = savedInstanceState.getInt(LOCATION_COUNT);
+            points = GeoPointAggregator.fromDoubleArray(savedInstanceState.getDoubleArray(COLLECTED_POINTS));
         }
 
         Intent intent = getIntent();
@@ -125,8 +128,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
             }
         }
 
-        dialog = buildDialog();
-        dialog.show();
+        buildAndShowDialog();
     }
 
 
@@ -134,6 +136,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(LOCATION_COUNT, locationCount);
+        outState.putDoubleArray(COLLECTED_POINTS, points.toDoubleArray());
     }
 
     @Override
@@ -166,6 +169,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         }
         if (dialog != null) {
             dialog.show();
+            updateLabels();
         }
     }
 
@@ -181,7 +185,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         super.onStop();
     }
 
-    private AlertDialog buildDialog() {
+    private void buildAndShowDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.geopoint_dialog_title));
         View view = getLayoutInflater().inflate(R.layout.geopoint_dialog, null);
@@ -210,7 +214,10 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
                     finishWithLocationResult();
                 }
             })
-            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            .setNegativeButton(R.string.clear, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) { }  // replaced below
+            })
+            .setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     Collect.getInstance().getActivityLogger().logInstanceAction(
                         this, "cancelLocation", "cancel");
@@ -219,7 +226,21 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
                 }
             })
             .setCancelable(false);  // back button doesn't cancel
-        return builder.create();
+
+        dialog = builder.create();
+        dialog.show();
+
+        // When the "Clear" button is pressed, we don't want to dismiss the
+        // dialog, so we override the DialogInterface.OnClickListener with a
+        // View.OnClickListener.  We have to wait until after the dialog is
+        // shown to get our hands on the button and set its listener.
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                points = new GeoPointAggregator();  // reset to an empty aggregator
+                updateLabels();
+                // We don't dismiss the dialog.
+            }
+        });
     }
 
     private void finishWithLocationResult() {
@@ -251,7 +272,7 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         InfoLogger.geolog("GeoPointActivity: " + System.currentTimeMillis()
             + " onLocationChanged(" + locationCount + ") " + location);
 
-        if (locationCount > 1) {
+        if (locationCount > 1 && LocationManager.GPS_PROVIDER.equals(location.getProvider())) {
             points.addLocation(location);
             locationProviderStatus = LocationProvider.AVAILABLE;
             lastLocationAccuracy = location.getAccuracy();
@@ -281,8 +302,10 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
                 break;
         }
 
+        boolean noneYet = (points.getNumPoints() == 0);
         int numPoints = points.getNumAcceptablePoints(accuracyThreshold);
         collectionStatusView.setText(
+            noneYet ? getString(R.string.geopoint_collection_status_no_points_yet) :
             getResources().getQuantityString(
                 R.plurals.geopoint_collection_status_points, numPoints, numPoints)
         );

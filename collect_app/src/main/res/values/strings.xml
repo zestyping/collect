@@ -385,7 +385,7 @@
     <string name="geopoint_location_status_searching">Searching for GPS location...</string>
     <string name="geopoint_location_status_acceptable">GPS accuracy: %.1f m (acceptable)</string>
     <string name="geopoint_location_status_unacceptable">GPS accuracy: %.1f m (unacceptable)</string>
-    <string name="geopoint_collection_status_no_points">No points collected yet.</string>
+    <string name="geopoint_collection_status_no_points_yet">No points collected yet.</string>
     <plurals name="geopoint_collection_status_points">
         <item quantity="zero">No acceptable points collected.</item>
         <item quantity="one">Collected 1 acceptable point.</item>

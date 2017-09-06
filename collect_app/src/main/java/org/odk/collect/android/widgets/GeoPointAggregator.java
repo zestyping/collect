@@ -1,6 +1,7 @@
 package org.odk.collect.android.widgets;
 
 import android.location.Location;
+import android.location.LocationManager;
 
 import org.javarosa.core.model.data.GeoPointData;
 
@@ -19,7 +20,6 @@ public class GeoPointAggregator {
     public int getNumPoints() {
         return locations.size();
     }
-
 
     public int getNumAcceptablePoints(double maxAccuracy) {
         int numPoints = 0;
@@ -61,5 +61,30 @@ public class GeoPointAggregator {
 
     public void addLocation(Location location) {
         locations.add(location);
+    }
+
+    public double[] toDoubleArray() {
+        double[] values = new double[locations.size() * 4];
+        int i = 0;
+        for (Location location : locations) {
+            values[i++] = location.getLatitude();
+            values[i++] = location.getLongitude();
+            values[i++] = location.getAltitude();
+            values[i++] = location.getAccuracy();
+        }
+        return values;
+    }
+
+    public static GeoPointAggregator fromDoubleArray(double[] values) {
+        GeoPointAggregator points = new GeoPointAggregator();
+        for (int i = 0; i < values.length; i += 4) {
+            Location location = new Location(LocationManager.GPS_PROVIDER);
+            location.setLatitude(values[i]);
+            location.setLongitude(values[i + 1]);
+            location.setAltitude(values[i + 2]);
+            location.setAccuracy((float) values[i + 3]);
+            points.addLocation(location);
+        }
+        return points;
     }
 }
