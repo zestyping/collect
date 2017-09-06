@@ -39,6 +39,7 @@ import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.spatial.MapHelper;
@@ -70,6 +71,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Boolean playCheck = false;
     private MapView mapView;
     public MyLocationNewOverlay myLocationOverlay;
+    private TextView locationStatus;
+    private TextView collectionStatus;
     private ImageButton locationButton;
     private ImageButton playButton;
     private ImageButton backspaceButton;
@@ -87,6 +90,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Polyline polyline;
     private ArrayList<Marker> mapMarkers = new ArrayList<Marker>();
     private Integer traceMode; // 0 manual, 1 is automatic
+    private long autoRecordingInterval;
     private Spinner timeUnits;
     private Spinner timeDelay;
     private Boolean beenPaused;
@@ -101,6 +105,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Boolean networkOn = false;
 
     public final String GPS_PROVIDER = "gps";
+    private final int TRACE_MODE_MANUAL = 0;
+    private final int TRACE_MODE_AUTO = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +122,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         mapView.setBuiltInZoomControls(true);
         mapView.getController().setZoom(zoomLevelWithoutFix);
         myLocationOverlay = new MyLocationNewOverlay(mapView);
+
+        locationStatus = (TextView) findViewById(R.id.geotrace_location_status);
+        collectionStatus = (TextView) findViewById(R.id.geotrace_collection_status);
 
         inflater = this.getLayoutInflater();
         traceSettingsView = inflater.inflate(R.layout.geotrace_dialog, null);
@@ -194,7 +203,6 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         beenPaused = false;
         traceMode = 1;
 
-
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -216,6 +224,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                         }
                     }
                     playCheck = true;
+                    updateStatusText();
                 } else {
                     playCheck = false;
                     startGeoTrace();
@@ -235,6 +244,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                 playCheck = true;
                 modeActive = false;
                 myLocationOverlay.disableFollowLocation();
+                updateStatusText();
 
                 try {
                     schedulerHandler.cancel(true);
@@ -336,6 +346,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         if (networkOn) {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
         }
+
+        updateStatusText();
     }
 
     @Override
@@ -356,6 +368,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             helper.setBasemap();
         }
 
+        updateStatusText();
         upMyLocationOverlayLayers();
     }
 
@@ -381,6 +394,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     }
 
     public void setGeoTraceScheduler(long delay, TimeUnit units) {
+        autoRecordingInterval = units.toSeconds(delay);
         schedulerHandler = scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -494,7 +508,22 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         } else {
             mapView.getController().setZoom(zoomLevelWithoutFix);
         }
+        updateStatusText();
+    }
 
+    private void updateStatusText() {
+        Location loc = myLocationOverlay.getLastFix();
+        locationStatus.setText(loc != null ?
+            getString(R.string.geotrace_location_status_accuracy, loc.getAccuracy()) :
+            getString(R.string.geotrace_location_status_waiting)
+        );
+
+        int numPoints = mapMarkers.size();
+        collectionStatus.setText(modeActive ? (
+            traceMode == TRACE_MODE_MANUAL ?
+                getString(R.string.geotrace_collection_status_manual, numPoints) :
+                getString(R.string.geotrace_collection_status_auto, numPoints, autoRecordingInterval)
+        ) : getString(R.string.geotrace_collection_status_paused, numPoints));
     }
 
     private void showGPSDisabledAlertToUser() {
@@ -541,6 +570,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                 }
                 break;
         }
+        updateStatusText();
     }
 
 
@@ -616,9 +646,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         int idx = rb.indexOfChild(radioButton);
         beenPaused = true;
         traceMode = idx;
-        if (traceMode == 0) {
+        if (traceMode == TRACE_MODE_MANUAL) {
             setupManualMode();
-        } else if (traceMode == 1) {
+        } else if (traceMode == TRACE_MODE_AUTO) {
             setupAutomaticMode();
         } else {
             reset_trace_settings();
@@ -626,14 +656,12 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         playButton.setVisibility(View.GONE);
         clearButton.setEnabled(false);
         pauseButton.setVisibility(View.VISIBLE);
-
-
+        updateStatusText();
     }
 
     private void setupManualMode() {
         manualCaptureButton.setVisibility(View.VISIBLE);
         modeActive = true;
-
     }
 
     private void setupAutomaticMode() {
@@ -676,6 +704,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
             backspaceButton.setEnabled(true);
         }
+        updateStatusText();
     }
 
     private void removeLastPoint() {
@@ -691,6 +720,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         mapView.invalidate();
 
         if (mapMarkers.isEmpty() || points.isEmpty()) backspaceButton.setEnabled(false);
+        updateStatusText();
     }
 
     private void saveGeoTrace() {
@@ -805,6 +835,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         mapView.invalidate();
         playButton.setEnabled(true);
         modeActive = false;
+        updateStatusText();
     }
 
     private void zoomToBounds() {
