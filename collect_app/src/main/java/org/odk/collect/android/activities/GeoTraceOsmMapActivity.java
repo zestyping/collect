@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.location.Location;
@@ -88,9 +89,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Polyline polyline;
     private ArrayList<Marker> mapMarkers = new ArrayList<Marker>();
     private Integer traceMode; // 0 manual, 1 is automatic
-    private long autoRecordingInterval;
-    private Spinner timeUnits;
-    private Spinner timeDelay;
+    private View traceAutoOptions;
+    private long autoIntervalSeconds;
+    private Spinner autoInterval;
     private Boolean beenPaused;
     private MapHelper helper;
 
@@ -131,11 +132,11 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         collectionStatus = (TextView) findViewById(R.id.geotrace_collection_status);
 
         inflater = this.getLayoutInflater();
-        traceSettingsView = inflater.inflate(R.layout.geotrace_dialog, null);
+        traceSettingsView = inflater.inflate(R.layout.geotrace_dialog_osm, null);
         polygonPolylineView = inflater.inflate(R.layout.polygon_polyline_dialog, null);
-        timeDelay = (Spinner) traceSettingsView.findViewById(R.id.trace_delay);
-        timeDelay.setSelection(1);  // default to a 5-second interval
-        timeUnits = (Spinner) traceSettingsView.findViewById(R.id.trace_scale);
+        autoInterval = (Spinner) traceSettingsView.findViewById(R.id.trace_osm_auto_interval);
+        autoInterval.setSelection(1);  // default to a 5-second interval
+        traceAutoOptions = traceSettingsView.findViewById(R.id.trace_osm_auto_options);
         layersButton = (ImageButton) findViewById(R.id.layers);
         layersButton.setOnClickListener(new View.OnClickListener() {
 
@@ -215,7 +216,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                         alert.show();
                     } else {
                         RadioGroup rb = (RadioGroup) traceSettingsView.findViewById(
-                                R.id.radio_group);
+                                R.id.trace_osm_radio_group);
                         int radioButtonID = rb.getCheckedRadioButtonId();
                         View radioButton = rb.findViewById(radioButtonID);
                         traceMode = rb.indexOfChild(radioButton);
@@ -397,11 +398,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         super.onDestroy();
     }
 
-    public void setGeoTraceScheduler(long delay, TimeUnit units) {
-        autoRecordingInterval = units.toSeconds(delay);
-        // Mark a point now; then the scheduler will fire starting after the
-        // first interval has elapsed.
-        addLocationMarkerIfAcceptable();
+    public void setGeoTraceScheduler(int intervalSeconds) {
+        autoIntervalSeconds = intervalSeconds;
         schedulerHandler = scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -412,7 +410,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
                     }
                 });
             }
-        }, delay, delay, units);
+        }, 0, intervalSeconds, TimeUnit.SECONDS);
     }
 
     public void overlayIntentTrace(String str) {
@@ -534,7 +532,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         collectionStatus.setText(modeActive ? (
             traceMode == TRACE_MODE_MANUAL ?
                 getString(R.string.geotrace_collection_status_manual, numPoints) :
-                getString(R.string.geotrace_collection_status_auto, numPoints, autoRecordingInterval)
+                getString(R.string.geotrace_collection_status_auto, numPoints, autoIntervalSeconds)
         ) : getString(R.string.geotrace_collection_status_paused, numPoints));
     }
 
@@ -561,30 +559,21 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     // Called when either the "Manual" or "Automatic" radio button is clicked
     public void setGeoTraceMode(View view) {
-        boolean checked = ((RadioButton) view).isChecked();
-        switch (view.getId()) {
-            case R.id.trace_manual:
-                if (checked) {
-                    traceMode = 0;
-                    timeUnits.setVisibility(View.GONE);
-                    timeDelay.setVisibility(View.GONE);
-                    timeDelay.invalidate();
-                    timeUnits.invalidate();
-                }
-                break;
-            case R.id.trace_automatic:
-                if (checked) {
-                    traceMode = 1;
-                    timeUnits.setVisibility(View.VISIBLE);
-                    timeDelay.setVisibility(View.VISIBLE);
-                    timeDelay.invalidate();
-                    timeUnits.invalidate();
-                }
-                break;
+        if (((RadioButton) view).isChecked()) {
+            switch (view.getId()) {
+                case R.id.trace_osm_manual:
+                    traceMode = TRACE_MODE_MANUAL;
+                    break;
+                case R.id.trace_osm_auto:
+                    traceMode = TRACE_MODE_AUTO;
+                    break;
+            }
         }
+        autoInterval.invalidate();
+        traceAutoOptions.setVisibility(
+            traceMode == TRACE_MODE_AUTO ? View.VISIBLE : View.GONE);
         updateStatusText();
     }
-
 
     private void buildDialogs() {
 
@@ -652,7 +641,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     }
 
     private void startGeoTrace() {
-        RadioGroup rb = (RadioGroup) traceSettingsView.findViewById(R.id.radio_group);
+        RadioGroup rb = (RadioGroup) traceSettingsView.findViewById(R.id.trace_osm_radio_group);
         int radioButtonID = rb.getCheckedRadioButtonId();
         View radioButton = rb.findViewById(radioButtonID);
         int idx = rb.indexOfChild(radioButton);
@@ -678,20 +667,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void setupAutomaticMode() {
         manualCaptureButton.setVisibility(View.VISIBLE);
-        String delay = timeDelay.getSelectedItem().toString();
-        String units = timeUnits.getSelectedItem().toString();
-        Long timeDelay;
-        TimeUnit timeUnitsValue;
-        if (units == getString(R.string.minutes)) {
-            timeDelay = Long.parseLong(delay) * (60); //Convert minutes to seconds
-            timeUnitsValue = TimeUnit.SECONDS;
-        } else {
-            //in Seconds
-            timeDelay = Long.parseLong(delay);
-            timeUnitsValue = TimeUnit.SECONDS;
-        }
-
-        setGeoTraceScheduler(timeDelay, timeUnitsValue);
+        TypedArray values = getResources().obtainTypedArray(R.array.interval_values);
+        setGeoTraceScheduler(values.getInt(autoInterval.getSelectedItemPosition(), 1));
         modeActive = true;
     }
 

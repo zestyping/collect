@@ -342,8 +342,9 @@
     <string name="dialog_continue">Continue</string>
     <string name="clear">Clear</string>
     <string name="polyline_polygon_text">Save GeoTrace As</string>
-    <string name="manual_mode">Manual Mode</string>
-    <string name="automatic_mode">Automatic Mode</string>
+    <string name="manual_mode">Manual recording</string>
+    <string name="automatic_mode">Automatic recording</string>
+    <string name="recording_interval">Recording interval:</string>
     <string name="geoshape_instruction">Long press to place marks.</string>
     <string name="geotrace_instruction">Wait for lock, then tap add marker button to start.</string>
     <string name="geotrace_location_status_searching">Searching for GPS location...</string>
