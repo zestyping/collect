@@ -64,9 +64,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         LocationListener {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture schedulerHandler;
-    public int zoomLevelWithoutFix = 3;
-    public int zoomLevelWithFix = 19;
-    public int maxZoomLevel = 22;
+
     public Boolean gpsStatus = true;
     private Boolean playCheck = false;
     private MapView mapView;
@@ -104,9 +102,12 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Boolean gpsOn = false;
     private Boolean networkOn = false;
 
-    public final String GPS_PROVIDER = "gps";
+    private final String GPS_PROVIDER = "gps";
     private final int TRACE_MODE_MANUAL = 0;
     private final int TRACE_MODE_AUTO = 1;
+    private final int ZOOM_LEVEL_NO_GPS_FIX = 3;
+    private final int ZOOM_LEVEL_WITH_GPS_FIX = 19;
+    private final int MAX_ZOOM_LEVEL = 22;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,8 +121,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         helper = new MapHelper(this, mapView, GeoTraceOsmMapActivity.this);
         mapView.setMultiTouchControls(true);
         mapView.setBuiltInZoomControls(true);
-        mapView.getController().setZoom(zoomLevelWithoutFix);
-        mapView.setMaxZoomLevel(maxZoomLevel);
+        mapView.getController().setZoom(ZOOM_LEVEL_NO_GPS_FIX);
+        mapView.setMaxZoomLevel(MAX_ZOOM_LEVEL);
         myLocationOverlay = new MyLocationNewOverlay(mapView);
 
         locationStatus = (TextView) findViewById(R.id.geotrace_location_status);
@@ -502,14 +503,14 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void zoomToMyLocation() {
         if (myLocationOverlay.getMyLocation() != null) {
-            mapView.setMaxZoomLevel(maxZoomLevel);
-            if (mapView.getZoomLevel() < zoomLevelWithFix) {
-                mapView.getController().setZoom(zoomLevelWithFix);
+            mapView.setMaxZoomLevel(MAX_ZOOM_LEVEL);
+            if (mapView.getZoomLevel() < ZOOM_LEVEL_WITH_GPS_FIX) {
+                mapView.getController().setZoom(ZOOM_LEVEL_WITH_GPS_FIX);
             }
             mapView.getController().setCenter(myLocationOverlay.getMyLocation());
             myLocationOverlay.enableFollowLocation();
         } else {
-            mapView.getController().setZoom(zoomLevelWithoutFix);
+            mapView.getController().setZoom(ZOOM_LEVEL_NO_GPS_FIX);
         }
         updateStatusText();
     }
