@@ -121,6 +121,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         mapView.setMultiTouchControls(true);
         mapView.setBuiltInZoomControls(true);
         mapView.getController().setZoom(zoomLevelWithoutFix);
+        mapView.setMaxZoomLevel(maxZoomLevel);
         myLocationOverlay = new MyLocationNewOverlay(mapView);
 
         locationStatus = (TextView) findViewById(R.id.geotrace_location_status);
