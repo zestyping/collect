@@ -275,6 +275,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             playButton.setEnabled(false);
             clearButton.setEnabled(true);
             locationButton.setEnabled(true);
+            backspaceButton.setEnabled(!locations.isEmpty());
         }
         myLocationOverlay.runOnFirstFix(centerAroundFix);
 
