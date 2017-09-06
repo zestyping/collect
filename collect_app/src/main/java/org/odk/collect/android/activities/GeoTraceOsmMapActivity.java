@@ -100,6 +100,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private Boolean gpsOn = false;
     private Boolean networkOn = false;
 
+    public final String GPS_PROVIDER = "gps";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -488,6 +490,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             mapView.setMaxZoomLevel(maxZoomLevel);
             mapView.getController().setZoom(zoomLevelWithFix);
             mapView.getController().setCenter(myLocationOverlay.getMyLocation());
+            myLocationOverlay.enableFollowLocation();
         } else {
             mapView.getController().setZoom(zoomLevelWithoutFix);
         }
@@ -653,14 +656,12 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     }
 
     private void addLocationMarker() {
-        if (myLocationOverlay.getMyLocation() != null) {
+        Location loc = myLocationOverlay.getLastFix();
+        if (loc != null && GPS_PROVIDER.equals(loc.getProvider())) {
             Marker marker = new Marker(mapView);
-            marker.setPosition(myLocationOverlay.getMyLocation());
-            Float lastKnownAccuracy =
-                    myLocationOverlay.getMyLocationProvider().getLastKnownLocation().getAccuracy();
-            myLocationOverlay.getMyLocationProvider().getLastKnownLocation().getAccuracy();
+            marker.setPosition(new GeoPoint(loc));
             marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_place_black_36dp));
-            marker.setSubDescription(Float.toString(lastKnownAccuracy));
+            marker.setSubDescription(Float.toString(loc.getAccuracy()));
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
             marker.setDraggable(true);
             marker.setOnMarkerDragListener(dragListener);
