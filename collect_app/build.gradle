@@ -99,7 +99,9 @@ android {
         debug {
             debuggable(true)
             // Allows AndroidTest JaCoCo reports to be generated
-            testCoverageEnabled(true)
+            // Test coverage is disabled for now because it breaks the debugger.
+            // See: https://issuetracker.google.com/issues/37008153
+            // testCoverageEnabled(true)
         }
     }
 
