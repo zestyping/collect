@@ -109,6 +109,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private final int ZOOM_LEVEL_WITH_GPS_FIX = 19;
     private final int MAX_ZOOM_LEVEL = 22;
 
+    private final double MAX_ACCEPTABLE_ACCURACY = 5.0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -517,10 +519,15 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void updateStatusText() {
         Location loc = myLocationOverlay.getLastFix();
-        locationStatus.setText(loc != null ?
-            getString(R.string.geotrace_location_status_accuracy, loc.getAccuracy()) :
-            getString(R.string.geotrace_location_status_searching)
+        boolean usable = loc != null && loc.getAccuracy() < MAX_ACCEPTABLE_ACCURACY;
+        locationStatus.setText(loc == null ?
+            getString(R.string.geotrace_location_status_searching) :
+                usable ? getString(R.string.geotrace_location_status_acceptable, loc.getAccuracy()) :
+                    getString(R.string.geotrace_location_status_unacceptable, loc.getAccuracy())
         );
+        locationStatus.setBackgroundColor(
+            loc == null ? Color.parseColor("#333333") :
+                usable ? Color.parseColor("#337733") : Color.parseColor("#773333"));
 
         int numPoints = mapMarkers.size();
         collectionStatus.setText(modeActive ? (
@@ -689,7 +696,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
     private void addLocationMarker() {
         Location loc = myLocationOverlay.getLastFix();
-        if (loc != null && GPS_PROVIDER.equals(loc.getProvider())) {
+        if (loc != null && GPS_PROVIDER.equals(loc.getProvider()) && loc.getAccuracy() < MAX_ACCEPTABLE_ACCURACY) {
             Marker marker = new Marker(mapView);
             marker.setPosition(new GeoPoint(loc));
             marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_place_black_36dp));
