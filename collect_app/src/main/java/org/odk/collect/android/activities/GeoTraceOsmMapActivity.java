@@ -116,7 +116,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private final int TRACE_MODE_AUTO = 1;
     private final int ZOOM_LEVEL_NO_GPS_FIX = 3;
     private final int ZOOM_LEVEL_WITH_GPS_FIX = 19;
-    private final int ZOOM_LEVEL_DURING_RECORDING = 20;
+    private final int ZOOM_LEVEL_DURING_RECORDING = 21;
     private final int MAX_ZOOM_LEVEL = 22;
 
     @Override
