@@ -134,7 +134,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         traceSettingsView = inflater.inflate(R.layout.geotrace_dialog, null);
         polygonPolylineView = inflater.inflate(R.layout.polygon_polyline_dialog, null);
         timeDelay = (Spinner) traceSettingsView.findViewById(R.id.trace_delay);
-        timeDelay.setSelection(3);
+        timeDelay.setSelection(1);  // default to a 5-second interval
         timeUnits = (Spinner) traceSettingsView.findViewById(R.id.trace_scale);
         layersButton = (ImageButton) findViewById(R.id.layers);
         layersButton.setOnClickListener(new View.OnClickListener() {
@@ -558,7 +558,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         alert.show();
     }
 
-    //This happens on click of the play button
+    // Called when either the "Manual" or "Automatic" radio button is clicked
     public void setGeoTraceMode(View view) {
         boolean checked = ((RadioButton) view).isChecked();
         switch (view.getId()) {
