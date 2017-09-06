@@ -346,7 +346,7 @@
     <string name="automatic_mode">Automatic Mode</string>
     <string name="geoshape_instruction">Long press to place marks.</string>
     <string name="geotrace_instruction">Wait for lock, then tap add marker button to start.</string>
-    <string name="geotrace_location_status_waiting">Waiting for GPS location...</string>
+    <string name="geotrace_location_status_searching">Searching for GPS location...</string>
     <string name="geotrace_location_status_accuracy">GPS location accuracy: %.1f m</string>
     <string name="geotrace_collection_status_paused">Points recorded: %d (paused)</string>
     <string name="geotrace_collection_status_manual">Points recorded: %d (manual recording)</string>

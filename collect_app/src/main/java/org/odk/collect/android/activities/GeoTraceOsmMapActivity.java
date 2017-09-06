@@ -518,7 +518,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         Location loc = myLocationOverlay.getLastFix();
         locationStatus.setText(loc != null ?
             getString(R.string.geotrace_location_status_accuracy, loc.getAccuracy()) :
-            getString(R.string.geotrace_location_status_waiting)
+            getString(R.string.geotrace_location_status_searching)
         );
 
         int numPoints = mapMarkers.size();
