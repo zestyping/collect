@@ -502,7 +502,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private void zoomToMyLocation() {
         if (myLocationOverlay.getMyLocation() != null) {
             mapView.setMaxZoomLevel(maxZoomLevel);
-            mapView.getController().setZoom(zoomLevelWithFix);
+            if (mapView.getZoomLevel() < zoomLevelWithFix) {
+                mapView.getController().setZoom(zoomLevelWithFix);
+            }
             mapView.getController().setCenter(myLocationOverlay.getMyLocation());
             myLocationOverlay.enableFollowLocation();
         } else {
@@ -917,16 +919,10 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     }
 
     @Override
-    public void onLocationChanged(Location location) {
-        if (modeActive && myLocationOverlay.getMyLocation() != null) {
-            mapView.getController().setCenter(myLocationOverlay.getMyLocation());
-        }
-    }
+    public void onLocationChanged(Location location) { }
 
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
+    public void onStatusChanged(String provider, int status, Bundle extras) { }
 
     @Override
     public void onProviderEnabled(String provider) {
