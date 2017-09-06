@@ -381,14 +381,19 @@
     <string name="go_back">Go back</string>
     <string name="download_selected">Download Selected</string>
     <string name="geopoint_dialog_title">Record a GPS point</string>
-    <string name="geopoint_dialog_searching">Searching for GPS location...</string>
-    <string name="geopoint_dialog_collected_no_points">No points collected yet.</string>
-    <string name="geopoint_dialog_collected_no_acceptable_points">No points have accuracy %.1f or better.</string>
-    <string name="geopoint_dialog_collected_1_point">1 point has accuracy %.1f or better.</string>
-    <string name="geopoint_dialog_collected_n_points">%1$d points have accuracy %.1f or better.</string>
+    <string name="geopoint_location_status_searching">Searching for GPS location...</string>
+    <string name="geopoint_location_status_acceptable">GPS accuracy: %.1f m (acceptable)</string>
+    <string name="geopoint_location_status_unacceptable">GPS accuracy: %.1f m (unacceptable)</string>
+    <string name="geopoint_collection_status_no_points">No points collected yet.</string>
+    <plurals name="geopoint_collection_status_points">
+        <item quantity="zero">No acceptable points collected.</item>
+        <item quantity="one">Collected 1 acceptable point.</item>
+        <item quantity="other">Collected %d acceptable points.</item>
+    </plurals>
     <string name="geopoint_dialog_save">Save this point</string>
-    <string name="geopoint_dialog_accuracy">Accuracy:</string>
-    <string name="geopoint_dialog_default_accuracy">5 m</string>
+    <string name="geopoint_dialog_accuracy">Required accuracy:</string>
+    <string name="geopoint_dialog_accuracy_threshold">%.1f m</string>
+    <string name="geopoint_dialog_default_accuracy_threshold">5.0 m</string>
     <string name="minus_sign">&#x2212;</string>
     <string name="plus_sign">+</string>
     <string name="record_geopoint">Record a point now</string>

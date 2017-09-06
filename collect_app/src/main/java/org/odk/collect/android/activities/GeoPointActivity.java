@@ -15,7 +15,6 @@
 package org.odk.collect.android.activities;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,6 +27,8 @@ import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
+import android.widget.TextView;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
@@ -36,21 +37,27 @@ import org.odk.collect.android.utilities.ToastUtils;
 import org.odk.collect.android.widgets.GeoPointAggregator;
 import org.odk.collect.android.widgets.GeoPointWidget;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 public class GeoPointActivity extends AppCompatActivity implements LocationListener {
 
     private static final String LOCATION_COUNT = "locationCount";
 
-    private ProgressDialog locationDialog;
+    private AlertDialog dialog;
     private LocationManager locationManager;
-    private Location location;
     private boolean gpsOn = false;
     private boolean networkOn = false;
-    private double locationAccuracy;
+
+    private int locationProviderStatus = LocationProvider.TEMPORARILY_UNAVAILABLE;
+    private double lastLocationAccuracy = 0;
+
+    private double accuracyThreshold;
     private int locationCount = 0;
     private GeoPointAggregator points = new GeoPointAggregator();
+
+    private TextView locationStatusView;
+    private TextView collectionStatusView;
+    private TextView accuracyThresholdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,10 +70,10 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
 
         Intent intent = getIntent();
 
-        locationAccuracy = GeoPointWidget.DEFAULT_LOCATION_ACCURACY;
+        accuracyThreshold = GeoPointWidget.DEFAULT_LOCATION_ACCURACY;
         if (intent != null && intent.getExtras() != null) {
             if (intent.hasExtra(GeoPointWidget.ACCURACY_THRESHOLD)) {
-                locationAccuracy = intent.getDoubleExtra(GeoPointWidget.ACCURACY_THRESHOLD,
+                accuracyThreshold = intent.getDoubleExtra(GeoPointWidget.ACCURACY_THRESHOLD,
                         GeoPointWidget.DEFAULT_LOCATION_ACCURACY);
             }
         }
@@ -118,8 +125,8 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
             }
         }
 
-        buildDialog().show();
-        //setupLocationDialog();
+        dialog = buildDialog();
+        dialog.show();
     }
 
 
@@ -140,8 +147,8 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
 
         // We're not using managed dialogs, so we have to dismiss the dialog to prevent it from
         // leaking memory.
-        if (locationDialog != null && locationDialog.isShowing()) {
-            locationDialog.dismiss();
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
         }
     }
 
@@ -157,8 +164,8 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
             }
         }
-        if (locationDialog != null) {
-            locationDialog.show();
+        if (dialog != null) {
+            dialog.show();
         }
     }
 
@@ -178,21 +185,35 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.geopoint_dialog_title));
         View view = getLayoutInflater().inflate(R.layout.geopoint_dialog, null);
+        locationStatusView = (TextView) view.findViewById(R.id.geopoint_dialog_location_status);
+        collectionStatusView = (TextView) view.findViewById(R.id.geopoint_dialog_collection_status);
+        accuracyThresholdView = (TextView) view.findViewById(R.id.geopoint_dialog_accuracy_threshold);
+
+        ((Button) view.findViewById(R.id.geopoint_decrement_accuracy_threshold)).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                adjustAccuracyThreshold(-1);
+            }
+        });
+        ((Button) view.findViewById(R.id.geopoint_increment_accuracy_threshold)).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                adjustAccuracyThreshold(1);
+            }
+        });
+
         builder.setView(view)
             .setPositiveButton(R.string.geopoint_dialog_save, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
-                    Collect.getInstance().getActivityLogger().logInstanceAction(this,
-                        "acceptLocation", "OK");
+                    Collect.getInstance().getActivityLogger().logInstanceAction(
+                        this, "acceptLocation", "OK");
                     dialog.cancel();
-                    returnLocation();
+                    finishWithLocation();
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    Collect.getInstance().getActivityLogger().logInstanceAction(this,
-                        "cancelLocation", "cancel");
-                    location = null;
+                    Collect.getInstance().getActivityLogger().logInstanceAction(
+                        this, "cancelLocation", "cancel");
                     dialog.cancel();
                     finish();
                 }
@@ -201,122 +222,78 @@ public class GeoPointActivity extends AppCompatActivity implements LocationListe
         return builder.create();
     }
 
-    /**
-     * Sets up the look and actions for the progress dialog while the GPS is searching.
-     */
-    private void setupLocationDialog() {
-        Collect.getInstance().getActivityLogger().logInstanceAction(this, "setupLocationDialog",
-                "show");
-
-        // dialog displayed while fetching gps location
-        locationDialog = new ProgressDialog(this);
-        DialogInterface.OnClickListener geoPointButtonListener =
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case DialogInterface.BUTTON_POSITIVE:
-                                Collect.getInstance().getActivityLogger().logInstanceAction(this,
-                                        "acceptLocation", "OK");
-                                returnLocation();
-                                break;
-                            case DialogInterface.BUTTON_NEGATIVE:
-                                Collect.getInstance().getActivityLogger().logInstanceAction(this,
-                                        "cancelLocation", "cancel");
-                                location = null;
-                                finish();
-                                break;
-                        }
-                    }
-                };
-
-        // back button doesn't cancel
-        locationDialog.setCancelable(false);
-        locationDialog.setIndeterminate(true);
-        locationDialog.setIcon(android.R.drawable.ic_dialog_info);
-        locationDialog.setTitle(getString(R.string.getting_location));
-        locationDialog.setMessage(getString(R.string.please_wait_long));
-        locationDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.save_point),
-                geoPointButtonListener);
-        locationDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
-                getString(R.string.cancel_location),
-                geoPointButtonListener);
-    }
-
-
-    private void returnLocation() {
-        if (location != null) {
-            Intent i = new Intent();
-            i.putExtra(
-                    FormEntryActivity.LOCATION_RESULT,
-                    location.getLatitude() + " " + location.getLongitude() + " "
-                            + location.getAltitude() + " " + location.getAccuracy());
-            setResult(RESULT_OK, i);
+    private void finishWithLocation() {
+        if (points.getNumAcceptablePoints(accuracyThreshold) > 0) {
+            setResult(RESULT_OK, new Intent().putExtra(
+                FormEntryActivity.LOCATION_RESULT,
+                points.getCentroid(accuracyThreshold).getDisplayText()
+            ));
         }
         finish();
     }
 
+    private void adjustAccuracyThreshold(double delta) {
+        accuracyThreshold += delta;
+        updateLabels();
+    }
 
     @Override
     public void onLocationChanged(Location location) {
-        this.location = location;
-        if (true) return;
-        if (this.location != null) {
-            // Bug report: cached GeoPoint is being returned as the first value.
-            // Wait for the 2nd value to be returned, which is hopefully not cached?
-            ++locationCount;
+        if (location == null) {
             InfoLogger.geolog("GeoPointActivity: " + System.currentTimeMillis()
-                    + " onLocationChanged(" + locationCount + ") lat: "
-                    + this.location.getLatitude() + " long: "
-                    + this.location.getLongitude() + " acc: "
-                    + this.location.getAccuracy());
+                + " onLocationChanged(" + locationCount + ") null location");
+            return;
+        }
 
-            if (locationCount > 1) {
-                locationDialog.setMessage(getString(R.string.location_provider_accuracy,
-                        this.location.getProvider(), truncateDouble(this.location.getAccuracy())));
+        // Bug report: cached GeoPoint is being returned as the first value.
+        // Wait for the 2nd value to be returned, which is hopefully not cached?
+        ++locationCount;
+        InfoLogger.geolog("GeoPointActivity: " + System.currentTimeMillis()
+            + " onLocationChanged(" + locationCount + ") " + location);
 
-                if (this.location.getAccuracy() <= locationAccuracy) {
-                    returnLocation();
-                }
-            }
-        } else {
-            InfoLogger.geolog("GeoPointActivity: " + System.currentTimeMillis()
-                    + " onLocationChanged(" + locationCount + ") null location");
+        if (locationCount > 1) {
+            points.addLocation(location);
+            locationProviderStatus = LocationProvider.AVAILABLE;
+            lastLocationAccuracy = location.getAccuracy();
+            updateLabels();
         }
     }
 
-    private String truncateDouble(float number) {
-        DecimalFormat df = new DecimalFormat("#.##");
-        return df.format(number);
-    }
+    private void updateLabels() {
+        accuracyThresholdView.setText(getString(
+            R.string.geopoint_dialog_accuracy_threshold, accuracyThreshold));
 
+        switch (locationProviderStatus) {
+            case LocationProvider.OUT_OF_SERVICE:
+            case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                locationStatusView.setText(R.string.geopoint_location_status_searching);
+                break;
+            case LocationProvider.AVAILABLE:
+                locationStatusView.setText(getString(
+                    lastLocationAccuracy < accuracyThreshold ?
+                        R.string.geopoint_location_status_acceptable :
+                        R.string.geopoint_location_status_unacceptable,
+                    lastLocationAccuracy
+                ));
+                break;
+        }
+
+        int numPoints = points.getNumAcceptablePoints(accuracyThreshold);
+        collectionStatusView.setText(
+            getResources().getQuantityString(
+                R.plurals.geopoint_collection_status_points, numPoints, numPoints)
+        );
+    }
 
     @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-
+    public void onProviderDisabled(String provider) { }
 
     @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
+    public void onProviderEnabled(String provider) { }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        switch (status) {
-            case LocationProvider.AVAILABLE:
-                if (location != null) {
-                    locationDialog.setMessage(getString(R.string.location_accuracy,
-                            location.getAccuracy()));
-                }
-                break;
-            case LocationProvider.OUT_OF_SERVICE:
-                break;
-            case LocationProvider.TEMPORARILY_UNAVAILABLE:
-                break;
-        }
+        locationProviderStatus = status;
+        updateLabels();
     }
-
 }

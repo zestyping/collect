@@ -2,7 +2,7 @@ package org.odk.collect.android.widgets;
 
 import android.location.Location;
 
-import org.osmdroid.util.GeoPoint;
+import org.javarosa.core.model.data.GeoPointData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,23 +31,30 @@ public class GeoPointAggregator {
         return numPoints;
     }
 
-    public GeoPoint getCentroid(double maxAccuracy) {
-        // The Earth is round, so the average latitude and average longitude
-        // aren't exactly the centroid, but it's not far off.
+    public GeoPointData getCentroid(double accuracyThreshold) {
+        // The average latitude and longitude aren't exactly the centroid
+        // because the Earth is not flat, but it's not far off.
         double latSum = 0;
         double lonSum = 0;
         double altSum = 0;
+        double maxAccuracy = 0;
         int numPoints = 0;
         for (Location location : locations) {
-            if (location.getAccuracy() <= maxAccuracy) {
+            if (location.getAccuracy() <= accuracyThreshold) {
                 latSum += location.getLatitude();
                 lonSum += location.getLongitude();
                 altSum += location.getAltitude();
+                maxAccuracy = Math.max(location.getAccuracy(), maxAccuracy);
                 numPoints++;
             }
         }
         if (numPoints > 0) {
-            return new GeoPoint(latSum/numPoints, lonSum/numPoints, altSum/numPoints);
+            return new GeoPointData(new double[] {
+                latSum/numPoints,
+                lonSum/numPoints,
+                altSum/numPoints,
+                maxAccuracy
+            });
         }
         return null;
     }
