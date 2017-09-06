@@ -380,7 +380,7 @@
     <string name="install_openmapkit">Please install OpenMapKit!</string>
     <string name="go_back">Go back</string>
     <string name="download_selected">Download Selected</string>
-    <string name="record_geopoint">Record GeoPoint</string>
+    <string name="record_geopoint">Record a point now</string>
     <string name="gps_result">Latitude: %1$s\nLongitude: %2$s\nAltitude: %3$sm\nAccuracy: %4$sm</string>
     <string name="parser_exception">XPathParser Exception: \"%s\"</string>
     <string name="selected_answer">Selected: %s</string>

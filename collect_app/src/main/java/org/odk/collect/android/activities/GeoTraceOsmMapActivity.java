@@ -21,8 +21,11 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -113,6 +116,7 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     private final int TRACE_MODE_AUTO = 1;
     private final int ZOOM_LEVEL_NO_GPS_FIX = 3;
     private final int ZOOM_LEVEL_WITH_GPS_FIX = 19;
+    private final int ZOOM_LEVEL_DURING_RECORDING = 20;
     private final int MAX_ZOOM_LEVEL = 22;
 
     @Override
@@ -129,7 +133,11 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         mapView.setBuiltInZoomControls(true);
         mapView.getController().setZoom(ZOOM_LEVEL_NO_GPS_FIX);
         mapView.setMaxZoomLevel(MAX_ZOOM_LEVEL);
+
         myLocationOverlay = new MyLocationNewOverlay(mapView);
+        Drawable crosshairs = ContextCompat.getDrawable(getApplicationContext(), R.drawable.crosshairs);
+        Bitmap crosshairsBitmap = ((BitmapDrawable) crosshairs).getBitmap();
+        myLocationOverlay.setDirectionArrow(crosshairsBitmap, crosshairsBitmap);
 
         locationStatus = (TextView) findViewById(R.id.geotrace_location_status);
         collectionStatus = (TextView) findViewById(R.id.geotrace_collection_status);
@@ -417,8 +425,8 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
             marker.setOnMarkerClickListener(nullMarkerListener);
             marker.setDraggable(true);
             marker.setOnMarkerDragListener(dragListener);
-            marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_place_black_36dp));
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.point_red));
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
             mapMarkers.add(marker);
             mapView.getOverlays().add(marker);
         }
@@ -637,6 +645,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
         playButton.setVisibility(View.GONE);
         clearButton.setEnabled(false);
         pauseButton.setVisibility(View.VISIBLE);
+        if (mapView.getZoomLevel() < ZOOM_LEVEL_DURING_RECORDING) {
+            mapView.getController().setZoom(ZOOM_LEVEL_DURING_RECORDING);
+        }
         updateStatusText();
     }
 
@@ -676,9 +687,9 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
 
             Marker marker = new Marker(mapView);
             marker.setPosition(new GeoPoint(loc));
-            marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_place_black_36dp));
+            marker.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.point_red));
             marker.setSubDescription(Float.toString(loc.getAccuracy()));
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
             marker.setDraggable(true);
             marker.setOnMarkerDragListener(dragListener);
             mapMarkers.add(marker);
@@ -887,23 +898,19 @@ public class GeoTraceOsmMapActivity extends Activity implements IRegisterReceive
     }
 
     @Override
-    public void onLocationChanged(Location location) { }
+    public void onLocationChanged(Location location) {
+        updateStatusText();
+    }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) { }
 
     @Override
-    public void onProviderEnabled(String provider) {
-
-    }
+    public void onProviderEnabled(String provider) { }
 
     @Override
-    public void onProviderDisabled(String provider) {
-
-    }
+    public void onProviderDisabled(String provider) { }
 
     @Override
-    public void destroy() {
-
-    }
+    public void destroy() { }
 }
