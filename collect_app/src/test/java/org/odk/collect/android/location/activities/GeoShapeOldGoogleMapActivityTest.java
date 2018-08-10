@@ -8,10 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.odk.collect.android.BuildConfig;
-import org.odk.collect.android.activities.GeoShapeGoogleMapActivity;
+import org.odk.collect.android.activities.GeoShapeOldGoogleMapActivity;
 import org.odk.collect.android.location.client.LocationClient;
 import org.odk.collect.android.location.client.LocationClients;
-import org.odk.collect.android.map.GoogleMapFragment;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
@@ -23,20 +22,19 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.odk.collect.android.location.activities
-    .GeoPointActivityTest.newMockLocation;
+import static org.odk.collect.android.location.activities.GeoPointActivityTest.newMockLocation;
 
 
 @Config(constants = BuildConfig.class)
 @RunWith(RobolectricTestRunner.class)
-public class GeoShapeGoogleMapActivityTest {
+public class GeoShapeOldGoogleMapActivityTest {
 
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
 
-    private ActivityController<GeoShapeGoogleMapActivity> activityController;
+    private ActivityController<GeoShapeOldGoogleMapActivity> activityController;
 
-    private GeoShapeGoogleMapActivity activity;
+    private GeoShapeOldGoogleMapActivity activity;
 
     @Mock
     LocationClient locationClient;
@@ -46,7 +44,7 @@ public class GeoShapeGoogleMapActivityTest {
      */
     @Before
     public void setUp() throws Exception {
-        activityController = Robolectric.buildActivity(GeoShapeGoogleMapActivity.class);
+        activityController = Robolectric.buildActivity(GeoShapeOldGoogleMapActivity.class);
         activity = activityController.get();
 
         LocationClients.setTestClient(locationClient);
@@ -62,13 +60,13 @@ public class GeoShapeGoogleMapActivityTest {
         when(locationClient.isLocationAvailable()).thenReturn(true);
 
         assertFalse(activity.getGpsButton().isEnabled());
-        getGoogleMapFragment().onClientStart();
+        activity.onClientStart();
         assertTrue(activity.getGpsButton().isEnabled());
 
-        verify(locationClient).requestLocationUpdates(getGoogleMapFragment());
+        verify(locationClient).requestLocationUpdates(activity);
 
         assertNull(activity.getZoomDialog());
-        getGoogleMapFragment().onLocationChanged(newMockLocation());
+        activity.onLocationChanged(newMockLocation());
         assertNotNull(activity.getZoomDialog());
 
         assertTrue(activity.getZoomDialog().isShowing());
@@ -83,12 +81,12 @@ public class GeoShapeGoogleMapActivityTest {
         activityController.create();
         activityController.start();
 
-        assertNull(getGoogleMapFragment().getGpsErrorDialog());
+        assertNull(activity.getErrorDialog());
 
-        getGoogleMapFragment().onClientStartFailure();
+        activity.onClientStartFailure();
 
-        assertNotNull(getGoogleMapFragment().getGpsErrorDialog());
-        assertTrue(getGoogleMapFragment().getGpsErrorDialog().isShowing());
+        assertNotNull(activity.getErrorDialog());
+        assertTrue(activity.getErrorDialog().isShowing());
     }
 
     @Test
@@ -98,15 +96,11 @@ public class GeoShapeGoogleMapActivityTest {
 
         when(locationClient.isLocationAvailable()).thenReturn(false);
 
-        assertNull(getGoogleMapFragment().getGpsErrorDialog());
+        assertNull(activity.getErrorDialog());
 
-        getGoogleMapFragment().onClientStart();
+        activity.onClientStart();
 
-        assertNotNull(getGoogleMapFragment().getGpsErrorDialog());
-        assertTrue(getGoogleMapFragment().getGpsErrorDialog().isShowing());
-    }
-
-    protected GoogleMapFragment getGoogleMapFragment() {
-        return (GoogleMapFragment) activity.getMapFragment();
+        assertNotNull(activity.getErrorDialog());
+        assertTrue(activity.getErrorDialog().isShowing());
     }
 }

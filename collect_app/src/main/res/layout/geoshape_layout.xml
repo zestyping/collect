@@ -15,6 +15,7 @@
         android:background="#BF000000">
 
         <TextView
+            android:id="@+id/top_text"
             android:text="@string/geoshape_instruction"
             android:textColor="#FFFFFF"
             android:layout_width="wrap_content"

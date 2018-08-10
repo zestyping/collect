@@ -18,6 +18,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.preference.PreferenceManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -28,12 +29,14 @@ import org.javarosa.core.model.data.StringData;
 import org.javarosa.form.api.FormEntryPrompt;
 import org.odk.collect.android.R;
 import org.odk.collect.android.activities.GeoShapeGoogleMapActivity;
+import org.odk.collect.android.activities.GeoShapeOldGoogleMapActivity;
 import org.odk.collect.android.activities.GeoShapeOsmMapActivity;
 import org.odk.collect.android.preferences.PreferenceKeys;
 import org.odk.collect.android.utilities.PlayServicesUtil;
 import org.odk.collect.android.widgets.interfaces.BinaryWidget;
 
-import static org.odk.collect.android.utilities.ApplicationConstants.RequestCodes;
+import static org.odk.collect.android.utilities.ApplicationConstants
+    .RequestCodes;
 
 /**
  * GeoShapeWidget is the widget that allows the user to get Collect multiple GPS points.
@@ -81,11 +84,19 @@ public class GeoShapeWidget extends QuestionWidget implements BinaryWidget {
         updateButtonLabelsAndVisibility(dataAvailable);
     }
 
+    private boolean isRingerOn() {
+        return ((AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE)).getRingerMode() == AudioManager.RINGER_MODE_NORMAL;
+    }
+
     private void startGeoShapeActivity() {
         Intent i;
         if (mapSDK.equals(GOOGLE_MAP_KEY)) {
             if (PlayServicesUtil.isGooglePlayServicesAvailable(getContext())) {
-                i = new Intent(getContext(), GeoShapeGoogleMapActivity.class);
+                if (isRingerOn()) {
+                    i = new Intent(getContext(), GeoShapeOldGoogleMapActivity.class);
+                } else {
+                    i = new Intent(getContext(), GeoShapeGoogleMapActivity.class);
+                }
             } else {
                 PlayServicesUtil.showGooglePlayServicesAvailabilityErrorDialog(getContext());
                 return;

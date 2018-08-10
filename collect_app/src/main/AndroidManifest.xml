@@ -187,6 +187,9 @@ the specific language governing permissions and limitations under the License.
             android:name=".activities.GeoShapeGoogleMapActivity"
             android:configChanges="orientation" />
         <activity
+            android:name=".activities.GeoShapeOldGoogleMapActivity"
+            android:configChanges="orientation" />
+        <activity
             android:name=".activities.GeoTraceOsmMapActivity"
             android:configChanges="orientation" />
         <activity
@@ -247,7 +250,7 @@ the specific language governing permissions and limitations under the License.
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBS-JQ-dnaZ_8qsbvSyr_I3rTPFd5fJsYI" />
+            android:value="AIzaSyAWQjpPvDARo2HZBCig8MbzIWxZIa9AJKc" />
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version"
