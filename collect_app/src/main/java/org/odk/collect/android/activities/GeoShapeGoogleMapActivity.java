@@ -18,192 +18,122 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
-import android.provider.Settings;
+import android.support.annotation.VisibleForTesting;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
-
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
-import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
+import android.widget.TextView;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
-import org.odk.collect.android.location.client.LocationClient;
-import org.odk.collect.android.location.client.LocationClients;
+import org.odk.collect.android.map.GoogleMapFragment;
+import org.odk.collect.android.map.MapFragment;
+import org.odk.collect.android.map.MapPoint;
 import org.odk.collect.android.spatial.MapHelper;
 import org.odk.collect.android.utilities.ToastUtils;
 import org.odk.collect.android.widgets.GeoShapeWidget;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
-/**
- * Version of the GeoShapeGoogleMapActivity that uses the new Maps v2 API and Fragments to enable
- * specifying a location via placing a tracker on a map.
- *
- * @author jonnordling@gmail.com
- */
-
-public class GeoShapeGoogleMapActivity extends CollectAbstractActivity implements LocationListener,
-        OnMarkerDragListener, OnMapLongClickListener, LocationClient.LocationClientListener {
-
-    private LocationClient locationClient;
-
-    private GoogleMap map;
-    private Location curLocation;
-    private LatLng curlatLng;
-    private PolygonOptions polygonOptions;
-    private Polygon polygon;
-    private final ArrayList<Marker> markerArray = new ArrayList<Marker>();
+/** Activity for entering or editing a polygon on a map. */
+public class GeoShapeGoogleMapActivity extends CollectAbstractActivity {
+    private MapFragment map;
+    private int shapeId = -1;  // will be a positive featureId once map is ready
     private ImageButton gpsButton;
     private ImageButton clearButton;
 
     private MapHelper helper;
     private AlertDialog zoomDialog;
-    private AlertDialog errorDialog;
     private View zoomDialogView;
     private Button zoomPointButton;
     private Button zoomLocationButton;
     private boolean foundFirstLocation;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.geoshape_layout);
-        SupportMapFragment mapFragment = new SupportMapFragment();
-        getSupportFragmentManager().beginTransaction()
-            .add(R.id.map_container, mapFragment).commit();
-        mapFragment.getMapAsync(this::setupMap);
 
-        gpsButton = findViewById(R.id.gps);
-        gpsButton.setEnabled(false);
+        // TODO(ping): Remove when we're ready to use this class.
+        ((TextView) findViewById(R.id.top_text)).setText("new GeoShapeActivity");
+
+        createMapFragment().addTo(this, R.id.map_container, this::setupMap);
+    }
+
+    // TODO(ping): Select the appropriate MapFragment implementation (Google or OSM).
+    public static MapFragment createMapFragment() {
+        return new GoogleMapFragment();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         Collect.getInstance().getActivityLogger().logOnStart(this);
-
-        locationClient = LocationClients.clientForContext(this);
-        locationClient.setListener(this);
-        locationClient.start();
+        if (map != null) map.setGpsLocationEnabled(true);
     }
 
     @Override
     protected void onStop() {
-        locationClient.stop();
-
+        map.setGpsLocationEnabled(false);
         Collect.getInstance().getActivityLogger().logOnStop(this);
         super.onStop();
     }
 
-    private void setupMap(GoogleMap googleMap) {
-        map = googleMap;
-        if (map == null) {
-            ToastUtils.showShortToast(R.string.google_play_services_error_occured);
+    private void setupMap(MapFragment newMapFragment) {
+        if (newMapFragment == null) {
             finish();
             return;
         }
-        helper = new MapHelper(this, map);
-        map.setMyLocationEnabled(true);
-        map.setOnMapLongClickListener(this);
-        map.setOnMarkerDragListener(this);
-        map.getUiSettings().setMyLocationButtonEnabled(false);
-        map.getUiSettings().setCompassEnabled(true);
-        map.getUiSettings().setZoomControlsEnabled(false);
 
-        polygonOptions = new PolygonOptions();
-        polygonOptions.strokeColor(Color.RED);
-        polygonOptions.zIndex(1);
+        map = newMapFragment;
+        map.setGpsLocationEnabled(true);
+        map.setGpsLocationListener(this::onLocationFix);
+        map.setLongPressListener(this::addVertex);
 
-        gpsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // if(curLocation !=null){
-                //    map.animateCamera(CameraUpdateFactory.newLatLngZoom(curlatLng,16));
-                // }
-                showZoomDialog();
-            }
-        });
+        helper = new MapHelper(this, newMapFragment);
+
+        gpsButton = findViewById(R.id.gps);
+        gpsButton.setOnClickListener(v -> showZoomDialog());
 
         clearButton = findViewById(R.id.clear);
-        clearButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (markerArray.size() != 0) {
-                    showClearDialog();
-                }
-            }
-        });
-        ImageButton returnButton = findViewById(R.id.save);
-        returnButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                returnLocation();
-            }
-        });
+        clearButton.setOnClickListener(v -> showClearDialog());
 
+        ImageButton saveButton = findViewById(R.id.save);
+        saveButton.setOnClickListener(v -> finishWithResult());
 
+        List<MapPoint> points = new ArrayList<>();
         Intent intent = getIntent();
-        if (intent != null && intent.getExtras() != null) {
-            if (intent.hasExtra(GeoShapeWidget.SHAPE_LOCATION)) {
-                clearButton.setEnabled(true);
-                String s = intent.getStringExtra(GeoShapeWidget.SHAPE_LOCATION);
-                gpsButton.setEnabled(true);
-                overlayIntentPolygon(s);
-            }
+        if (intent != null && intent.hasExtra(GeoShapeWidget.SHAPE_LOCATION)) {
+            points = parsePoints(intent.getStringExtra(GeoShapeWidget.SHAPE_LOCATION));
         }
+        shapeId = map.addDraggableShape(points);
+        gpsButton.setEnabled(!points.isEmpty());
+        clearButton.setEnabled(!points.isEmpty());
 
         ImageButton layersButton = findViewById(R.id.layers);
-        layersButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                helper.showLayersDialog(GeoShapeGoogleMapActivity.this);
-            }
-        });
+        layersButton.setOnClickListener(v -> helper.showLayersDialog(GeoShapeGoogleMapActivity.this));
 
         zoomDialogView = getLayoutInflater().inflate(R.layout.geo_zoom_dialog, null);
 
         zoomLocationButton = zoomDialogView.findViewById(R.id.zoom_location);
-        zoomLocationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (curLocation != null && curlatLng != null) {
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(curlatLng, 17));
-                }
-                zoomDialog.dismiss();
-            }
+        zoomLocationButton.setOnClickListener(v -> {
+            map.setCenter(map.getGpsLocation());
+            zoomDialog.dismiss();
         });
 
         zoomPointButton = zoomDialogView.findViewById(R.id.zoom_saved_location);
-        zoomPointButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // zoomToCentroid();
-                zoomToBounds();
-                zoomDialog.dismiss();
-            }
+        zoomPointButton.setOnClickListener(v -> {
+            map.zoomToBoundingBox(map.getPointsOfShape(shapeId), 0.8);
+            zoomDialog.dismiss();
         });
+
         // If there is a last know location go there
-        if (curLocation != null) {
-            curlatLng = new LatLng(curLocation.getLatitude(), curLocation.getLongitude());
+        if (hasWindowFocus() && map.getGpsLocation() != null) {
             foundFirstLocation = true;
             gpsButton.setEnabled(true);
             showZoomDialog();
@@ -212,158 +142,93 @@ public class GeoShapeGoogleMapActivity extends CollectAbstractActivity implement
         helper.setBasemap();
     }
 
-    private void returnLocation() {
-        String finalReturnString = generateReturnString();
-        Intent i = new Intent();
-        i.putExtra(
-                FormEntryActivity.GEOSHAPE_RESULTS,
-                finalReturnString);
-        setResult(RESULT_OK, i);
-        if (markerArray.size() < 4) {
+    private void finishWithResult() {
+        List<MapPoint> points = map.getPointsOfShape(shapeId);
+        if (points.size() < 3) {
             ToastUtils.showShortToastInMiddle(getString(R.string.polygon_validator));
-        } else {
-            finish();
+            return;
         }
+
+        setResult(RESULT_OK, new Intent().putExtra(
+            FormEntryActivity.GEOSHAPE_RESULTS, formatPoints(points)));
+        finish();
     }
 
-    private void overlayIntentPolygon(String str) {
-        map.setOnMapLongClickListener(null);
-        clearButton.setEnabled(true);
-        String s = str.replace("; ", ";");
-        String[] sa = s.split(";");
-        for (int i = 0; i < (sa.length - 1); i++) {
-            String[] sp = sa[i].split(" ");
-            double[] gp = new double[4];
-            String lat = sp[0].replace(" ", "");
-            String lng = sp[1].replace(" ", "");
-            gp[0] = Double.parseDouble(lat);
-            gp[1] = Double.parseDouble(lng);
-            LatLng point = new LatLng(gp[0], gp[1]);
-            polygonOptions.add(point);
-            MarkerOptions markerOptions = new MarkerOptions().position(point).draggable(true);
-            Marker marker = map.addMarker(markerOptions);
-            markerArray.add(marker);
-        }
-        polygon = map.addPolygon(polygonOptions);
-        update_polygon();
-
-    }
-
-    private String generateReturnString() {
-        String tempString = "";
-        //Add the first marker to the end of the array, so the first and the last are the same
-        if (markerArray.size() > 1) {
-            if (Collections.frequency(markerArray, markerArray.get(0)) < 2) {
-                markerArray.add(markerArray.get(0));
+    /**
+     * Parses a form result string, as previously formatted by formatPoints,
+     * into a list of polygon vertices.
+     */
+    private List<MapPoint> parsePoints(String coords) {
+        List<MapPoint> points = new ArrayList<>();
+        for (String vertex : (coords == null ? "" : coords).split(";")) {
+            String[] words = vertex.trim().split(" ");
+            if (words.length < 2) continue;
+            double lat, lon;
+            try {
+                lat = Double.parseDouble(words[0]);
+                lon = Double.parseDouble(words[1]);
+            } catch (NumberFormatException e) {
+                continue;
             }
-            for (int i = 0; i < markerArray.size(); i++) {
-                String lat = Double.toString(markerArray.get(i).getPosition().latitude);
-                String lng = Double.toString(markerArray.get(i).getPosition().longitude);
-                String alt = "0.0";
-                String acu = "0.0";
-                tempString = tempString + lat + " " + lng + " " + alt + " " + acu + ";";
-            }
+            points.add(new MapPoint(lat, lon));
         }
-        return tempString;
+        // Polygons are stored with a last point that duplicates the first
+        // point.  To prepare the polygon for display and editing, we need
+        // to remove this duplicate point.
+        int count = points.size();
+        if (count > 1 && points.get(0).equals(points.get(count - 1))) {
+            points.remove(count - 1);
+        }
+        return points;
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        // If there is a location allow for user to be able to fly there
+    /**
+     * Serializes a list of polygon vertices into a string, in the format
+     * appropriate for storing as the result of this form question.
+     */
+    private String formatPoints(List<MapPoint> points) {
+        String result = "";
+        if (points.size() > 1) {
+            // Polygons are stored with a last point that duplicates the
+            // first point.  Add this extra point if it's not already present.
+            if (!points.get(0).equals(points.get(points.size() - 1))) {
+                points.add(points.get(0));
+            }
+            for (MapPoint point : points) {
+                result += String.format(Locale.US, "%.6f %.6f 0.0 0.0;", point.lat, point.lon);
+            }
+        }
+        return result;
+    }
+
+    private void onLocationFix(MapPoint point) {
         gpsButton.setEnabled(true);
-        curLocation = location;
-        curlatLng = new LatLng(curLocation.getLatitude(), curLocation.getLongitude());
-
-        if (!foundFirstLocation) {
-            showZoomDialog();
+        if (hasWindowFocus() && !foundFirstLocation) {
             foundFirstLocation = true;
+            showZoomDialog();
         }
     }
 
-    private void update_polygon() {
-        ArrayList<LatLng> tempLat = new ArrayList<LatLng>();
-        for (int i = 0; i < markerArray.size(); i++) {
-            LatLng latLng = markerArray.get(i).getPosition();
-            tempLat.add(latLng);
-        }
-        polygon.setPoints(tempLat);
+    private void addVertex(MapPoint point) {
+        map.appendPointToShape(shapeId, point);
+        clearButton.setEnabled(true);
     }
 
-    @Override
-    public void onMapLongClick(LatLng latLng) {
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).draggable(true);
-        Marker marker = map.addMarker(markerOptions);
-        markerArray.add(marker);
-
-        if (polygon == null) {
-            clearButton.setEnabled(true);
-            polygonOptions.add(latLng);
-            polygon = map.addPolygon(polygonOptions);
-        } else {
-            update_polygon();
-        }
-    }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-        update_polygon();
-    }
-
-    @Override
-    public void onMarkerDrag(Marker marker) {
-        update_polygon();
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-        update_polygon();
-    }
-
-    private void zoomToBounds() {
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                for (Marker marker : markerArray) {
-                    builder.include(marker.getPosition());
-                }
-                LatLngBounds bounds = builder.build();
-                int padding = 200; // offset from edges of the map in pixels
-                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-                map.animateCamera(cu);
-            }
-        }, 100);
-
-    }
-
-
-    private void clearFeatures() {
-        map.clear();
-        polygon = null;
-        polygonOptions = new PolygonOptions();
-        polygonOptions.strokeColor(Color.RED);
-        polygonOptions.zIndex(1);
-        markerArray.clear();
-        map.setOnMapLongClickListener(this);
-
+    private void clear() {
+        map.clearFeatures();
+        shapeId = map.addDraggableShape(new ArrayList<>());
+        map.setLongPressListener(this::addVertex);
+        clearButton.setEnabled(false);
     }
 
     private void showClearDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(getString(R.string.geo_clear_warning))
-                .setPositiveButton(getString(R.string.clear),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                clearFeatures();
-                            }
-                        })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
-
-                    }
-                }).show();
-
+        if (!map.getPointsOfShape(shapeId).isEmpty()) {
+            new AlertDialog.Builder(this)
+                .setMessage(getString(R.string.geo_clear_warning))
+                .setPositiveButton(getString(R.string.clear), (dialog, id) -> clear())
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+        }
     }
 
     public void showZoomDialog() {
@@ -371,23 +236,23 @@ public class GeoShapeGoogleMapActivity extends CollectAbstractActivity implement
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(getString(R.string.zoom_to_where));
             builder.setView(zoomDialogView)
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.cancel();
-                        }
-                    })
-                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            dialog.cancel();
-                            zoomDialog.dismiss();
-                        }
-                    });
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        dialog.cancel();
+                        zoomDialog.dismiss();
+                    }
+                });
             zoomDialog = builder.create();
         }
 
         if (zoomLocationButton != null) {
-            if (curLocation != null) {
+            if (map.getGpsLocation() != null) {
                 zoomLocationButton.setEnabled(true);
                 zoomLocationButton.setBackgroundColor(Color.parseColor("#50cccccc"));
                 zoomLocationButton.setTextColor(themeUtils.getPrimaryTextColor());
@@ -397,7 +262,7 @@ public class GeoShapeGoogleMapActivity extends CollectAbstractActivity implement
                 zoomLocationButton.setTextColor(Color.parseColor("#FF979797"));
             }
 
-            if (markerArray.size() != 0) {
+            if (!map.getPointsOfShape(shapeId).isEmpty()) {
                 zoomPointButton.setEnabled(true);
                 zoomPointButton.setBackgroundColor(Color.parseColor("#50cccccc"));
                 zoomPointButton.setTextColor(themeUtils.getPrimaryTextColor());
@@ -411,56 +276,13 @@ public class GeoShapeGoogleMapActivity extends CollectAbstractActivity implement
         zoomDialog.show();
     }
 
-    private void showGPSDisabledAlertToUser() {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage(getString(R.string.gps_enable_message))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.enable_gps),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                startActivityForResult(
-                                        new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
-                            }
-                        });
-        alertDialogBuilder.setNegativeButton(getString(R.string.cancel),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        errorDialog = alertDialogBuilder.create();
-        errorDialog.show();
-    }
-
-    @Override
-    public void onClientStart() {
-        locationClient.requestLocationUpdates(this);
-        if (!locationClient.isLocationAvailable()) {
-            showGPSDisabledAlertToUser();
-        } else {
-            gpsButton.setEnabled(true);
-        }
-    }
-
-    @Override
-    public void onClientStartFailure() {
-        showGPSDisabledAlertToUser();
-    }
-
-    @Override
-    public void onClientStop() {
-
-    }
-
     public ImageButton getGpsButton() {
         return gpsButton;
     }
 
-    public AlertDialog getZoomDialog() {
+    @VisibleForTesting public AlertDialog getZoomDialog() {
         return zoomDialog;
     }
 
-    public AlertDialog getErrorDialog() {
-        return errorDialog;
-    }
+    @VisibleForTesting public MapFragment getMapFragment() { return map; }
 }

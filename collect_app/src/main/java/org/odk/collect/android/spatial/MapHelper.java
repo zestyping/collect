@@ -35,6 +35,8 @@ import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
+import org.odk.collect.android.map.GoogleMapFragment;
+import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.preferences.PreferenceKeys;
 import org.odk.collect.android.utilities.ToastUtils;
 import org.osmdroid.tileprovider.IRegisterReceiver;
@@ -81,6 +83,14 @@ public class MapHelper {
 
     private final org.odk.collect.android.spatial.TileSourceFactory tileFactory;
 
+    /**
+     * TODO(ping): When MapFragment adds support for selectable basemaps,
+     * use that instead of reaching inside the GoogleMapFragment for its map.
+     */
+    public MapHelper(Context context, MapFragment mapFragment) {
+        this(context, (mapFragment instanceof GoogleMapFragment) ?
+            ((GoogleMapFragment) mapFragment).getGoogleMap() : null);
+    }
 
     public MapHelper(Context context, GoogleMap googleMap) {
         this.googleMap = null;
@@ -129,7 +139,7 @@ public class MapHelper {
                     googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                     break;
             }
-        } else {
+        } else if (osmMap != null) {
             //OSMMAP
             String basemap = getOsmBasemap();
 
@@ -143,11 +153,11 @@ public class MapHelper {
                 case OPENMAP_USGS_SAT:
                     tileSource = tileFactory.getUsgsSat();
                     break;
-                    
+
                 case OPENMAP_USGS_IMG:
                     tileSource = tileFactory.getUsgsImg();
                     break;
-                    
+
                 case OPENMAP_STAMEN_TERRAIN:
                     tileSource = tileFactory.getStamenTerrain();
                     break;
