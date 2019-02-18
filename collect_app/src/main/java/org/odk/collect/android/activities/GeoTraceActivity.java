@@ -53,7 +53,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     public static final String MAP_ZOOM_KEY = "map_zoom";
     public static final String POINTS_KEY = "points";
     public static final String BEEN_PAUSED_KEY = "been_paused";
-    public static final String MODE_ACTIVE_KEY = "mode_active";
+    public static final String RECORDING_ACTIVE_KEY = "recording_active";
     public static final String TRACE_MODE_KEY = "trace_mode";
     public static final String PLAY_CHECK_KEY = "play_check";
     public static final String TIME_DELAY_KEY = "time_delay";
@@ -79,7 +79,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     private AlertDialog polygonOrPolylineDialog;
 
     private boolean beenPaused;
-    private boolean modeActive;
+    private boolean recordingActive;
     private Integer traceMode = 0; // 0 manual, 1 is automatic
     private boolean playCheck;
     private Spinner timeUnits;
@@ -99,7 +99,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
             restoredMapZoom = savedInstanceState.getDouble(MAP_ZOOM_KEY);
             restoredPoints = savedInstanceState.getParcelableArrayList(POINTS_KEY);
             beenPaused = savedInstanceState.getBoolean(BEEN_PAUSED_KEY, false);
-            modeActive = savedInstanceState.getBoolean(MODE_ACTIVE_KEY, false);
+            recordingActive = savedInstanceState.getBoolean(RECORDING_ACTIVE_KEY, false);
             traceMode = savedInstanceState.getInt(TRACE_MODE_KEY, 0);
             playCheck = savedInstanceState.getBoolean(PLAY_CHECK_KEY, false);
             restoredTimeDelayIndex = savedInstanceState.getInt(TIME_DELAY_KEY, 3);
@@ -141,7 +141,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         state.putDouble(MAP_ZOOM_KEY, map.getZoom());
         state.putParcelableArrayList(POINTS_KEY, new ArrayList<>(map.getPolyPoints(featureId)));
         state.putBoolean(BEEN_PAUSED_KEY, beenPaused);
-        state.putBoolean(MODE_ACTIVE_KEY, modeActive);
+        state.putBoolean(RECORDING_ACTIVE_KEY, recordingActive);
         state.putInt(TRACE_MODE_KEY, traceMode);
         state.putBoolean(PLAY_CHECK_KEY, playCheck);
         state.putInt(TIME_DELAY_KEY, timeDelay.getSelectedItemPosition());
@@ -187,7 +187,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         pauseButton = findViewById(R.id.pause);
         pauseButton.setOnClickListener(v -> {
             playCheck = true;
-            modeActive = false;
+            recordingActive = false;
             try {
                 schedulerHandler.cancel(true);
             } catch (Exception e) {
@@ -277,7 +277,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         }
         featureId = map.addDraggablePoly(points, false);
 
-        if (modeActive) {
+        if (recordingActive) {
             startGeoTrace();
         }
 
@@ -396,7 +396,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     }
 
     private void setupManualMode() {
-        modeActive = true;
+        recordingActive = true;
     }
 
     private void setupAutomaticMode() {
@@ -415,7 +415,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         }
 
         setGeoTraceScheduler(timeDelay, timeUnitsValue);
-        modeActive = true;
+        recordingActive = true;
     }
 
     public void setGeoTraceMode(View view) {
@@ -456,7 +456,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     }
 
     private void onGpsLocation(MapPoint point) {
-        if (modeActive) {
+        if (recordingActive) {
             map.setCenter(point, false);
         }
     }
@@ -472,7 +472,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     private void clear() {
         map.clearFeatures();
         featureId = map.addDraggablePoly(new ArrayList<>(), false);
-        modeActive = false;
+        recordingActive = false;
         playCheck = false;
         beenPaused = false;
         updateButtons();
@@ -484,9 +484,9 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         MapPoint location = map.getGpsLocation();
 
         // Visibility (only the play, pause, manual buttons ever disappear)
-        playButton.setVisibility(modeActive ? View.GONE : View.VISIBLE);
-        pauseButton.setVisibility(modeActive ? View.VISIBLE : View.GONE);
-        manualButton.setVisibility(modeActive ? View.VISIBLE : View.GONE);
+        playButton.setVisibility(recordingActive ? View.GONE : View.VISIBLE);
+        pauseButton.setVisibility(recordingActive ? View.VISIBLE : View.GONE);
+        manualButton.setVisibility(recordingActive ? View.VISIBLE : View.GONE);
 
         // Enabled state
         zoomButton.setEnabled(location != null);
