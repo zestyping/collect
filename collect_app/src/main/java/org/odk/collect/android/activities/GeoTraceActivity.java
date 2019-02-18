@@ -54,7 +54,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     public static final String POINTS_KEY = "points";
     public static final String BEEN_PAUSED_KEY = "been_paused";
     public static final String RECORDING_ACTIVE_KEY = "recording_active";
-    public static final String TRACE_MODE_KEY = "trace_mode";
+    public static final String RECORDING_MODE_KEY = "recording_mode";
     public static final String PLAY_CHECK_KEY = "play_check";
     public static final String TIME_DELAY_KEY = "time_delay";
     public static final String TIME_UNITS_KEY = "time_units";
@@ -80,7 +80,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
 
     private boolean beenPaused;
     private boolean recordingActive;
-    private Integer traceMode = 0; // 0 manual, 1 is automatic
+    private int recordingMode = 0; // 0 manual, 1 is automatic
     private boolean playCheck;
     private Spinner timeUnits;
     private Spinner timeDelay;
@@ -100,7 +100,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
             restoredPoints = savedInstanceState.getParcelableArrayList(POINTS_KEY);
             beenPaused = savedInstanceState.getBoolean(BEEN_PAUSED_KEY, false);
             recordingActive = savedInstanceState.getBoolean(RECORDING_ACTIVE_KEY, false);
-            traceMode = savedInstanceState.getInt(TRACE_MODE_KEY, 0);
+            recordingMode = savedInstanceState.getInt(RECORDING_MODE_KEY, 0);
             playCheck = savedInstanceState.getBoolean(PLAY_CHECK_KEY, false);
             restoredTimeDelayIndex = savedInstanceState.getInt(TIME_DELAY_KEY, 3);
             restoredTimeUnitsIndex = savedInstanceState.getInt(TIME_UNITS_KEY, 0);
@@ -142,7 +142,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         state.putParcelableArrayList(POINTS_KEY, new ArrayList<>(map.getPolyPoints(featureId)));
         state.putBoolean(BEEN_PAUSED_KEY, beenPaused);
         state.putBoolean(RECORDING_ACTIVE_KEY, recordingActive);
-        state.putInt(TRACE_MODE_KEY, traceMode);
+        state.putInt(RECORDING_MODE_KEY, recordingMode);
         state.putBoolean(PLAY_CHECK_KEY, playCheck);
         state.putInt(TIME_DELAY_KEY, timeDelay.getSelectedItemPosition());
         state.putInt(TIME_UNITS_KEY, timeUnits.getSelectedItemPosition());
@@ -173,7 +173,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
 
         traceSettingsView = getLayoutInflater().inflate(R.layout.geotrace_dialog, null);
         RadioGroup group = traceSettingsView.findViewById(R.id.radio_group);
-        group.check(group.getChildAt(traceMode).getId());
+        group.check(group.getChildAt(recordingMode).getId());
         timeDelay = traceSettingsView.findViewById(R.id.trace_delay);
         timeDelay.setSelection(restoredTimeDelayIndex);
         timeUnits = traceSettingsView.findViewById(R.id.trace_scale);
@@ -213,10 +213,10 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
                 } else {
                     RadioGroup rb = traceSettingsView.findViewById(R.id.radio_group);
                     View radioButton = rb.findViewById(rb.getCheckedRadioButtonId());
-                    traceMode = rb.indexOfChild(radioButton);
-                    if (traceMode == 0) {
+                    recordingMode = rb.indexOfChild(radioButton);
+                    if (recordingMode == 0) {
                         setupManualMode();
-                    } else if (traceMode == 1) {
+                    } else if (recordingMode == 1) {
                         setupAutomaticMode();
                     } else {
                         //Do nothing
@@ -382,12 +382,11 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     private void startGeoTrace() {
         RadioGroup rb = traceSettingsView.findViewById(R.id.radio_group);
         View radioButton = rb.findViewById(rb.getCheckedRadioButtonId());
-        int idx = rb.indexOfChild(radioButton);
         beenPaused = true;
-        traceMode = idx;
-        if (traceMode == 0) {
+        recordingMode = rb.indexOfChild(radioButton);
+        if (recordingMode == 0) {
             setupManualMode();
-        } else if (traceMode == 1) {
+        } else if (recordingMode == 1) {
             setupAutomaticMode();
         } else {
             playCheck = false;
@@ -402,7 +401,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
     private void setupAutomaticMode() {
         String delay = timeDelay.getSelectedItem().toString();
         String units = timeUnits.getSelectedItem().toString();
-        Long timeDelay;
+        long timeDelay;
         TimeUnit timeUnitsValue;
         if (units.equals(getString(R.string.minutes))) {
             timeDelay = Long.parseLong(delay) * 60;
@@ -414,16 +413,16 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
             timeUnitsValue = TimeUnit.SECONDS;
         }
 
-        setGeoTraceScheduler(timeDelay, timeUnitsValue);
+        startScheduler(timeDelay, timeUnitsValue);
         recordingActive = true;
     }
 
-    public void setGeoTraceMode(View view) {
+    public void updateRecordingMode(View view) {
         boolean checked = ((RadioButton) view).isChecked();
         switch (view.getId()) {
             case R.id.trace_manual:
                 if (checked) {
-                    traceMode = 0;
+                    recordingMode = 0;
                     timeUnits.setVisibility(View.GONE);
                     timeDelay.setVisibility(View.GONE);
                     timeDelay.invalidate();
@@ -432,7 +431,7 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
                 break;
             case R.id.trace_automatic:
                 if (checked) {
-                    traceMode = 1;
+                    recordingMode = 1;
                     timeUnits.setVisibility(View.VISIBLE);
                     timeDelay.setVisibility(View.VISIBLE);
                     timeDelay.invalidate();
@@ -442,9 +441,9 @@ public class GeoTraceActivity extends BaseGeoMapActivity implements IRegisterRec
         }
     }
 
-    public void setGeoTraceScheduler(long delay, TimeUnit units) {
+    public void startScheduler(long delay, TimeUnit units) {
         schedulerHandler = scheduler.scheduleAtFixedRate(
-            () -> runOnUiThread(() -> addVertex()), 0, delay, units);
+            () -> runOnUiThread(this::addVertex), 0, delay, units);
     }
 
     @SuppressWarnings("unused")  // the "map" parameter is intentionally unused
