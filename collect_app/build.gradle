@@ -63,6 +63,7 @@ def secrets = new Properties()
 if (secretsFile.exists()) {
     secrets.load(new FileInputStream(secretsFile))
 }
+def mapboxToken = secrets.getProperty('MAPBOX_ACCESS_TOKEN', '')
 
 android {
     compileSdkVersion(28)
@@ -99,7 +100,7 @@ android {
             minifyEnabled(true)
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
             resValue("bool", "FIREBASE_CRASHLYTICS_ENABLED", "false")
-            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", MAPBOX_ACCESS_TOKEN
+            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", '"' + mapboxToken + '"'
         }
         // Release build for the official ODK Collect app
         odkCollectRelease {
@@ -109,13 +110,13 @@ android {
             minifyEnabled(true)
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
             resValue("bool", "FIREBASE_CRASHLYTICS_ENABLED", "true")
-            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", MAPBOX_ACCESS_TOKEN
+            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", '"' + mapboxToken + '"'
         }
         debug {
             debuggable(true)
             testCoverageEnabled(true)
             resValue("bool", "FIREBASE_CRASHLYTICS_ENABLED", "false")
-            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", MAPBOX_ACCESS_TOKEN
+            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", '"' + mapboxToken + '"'
         }
     }
 
