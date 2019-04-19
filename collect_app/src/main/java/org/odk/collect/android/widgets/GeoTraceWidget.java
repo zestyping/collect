@@ -47,6 +47,8 @@ import static org.odk.collect.android.utilities.ApplicationConstants.RequestCode
 public class GeoTraceWidget extends QuestionWidget implements BinaryWidget {
 
     public static final String GOOGLE_MAP_KEY = "google_maps";
+    public static final String TRACE_LOCATION = "gp";
+    public static final String MAPBOX_MAPS = "mapbox";
     public SharedPreferences sharedPreferences;
     public String mapSDK;
     private final Button createTraceButton;
@@ -56,7 +58,7 @@ public class GeoTraceWidget extends QuestionWidget implements BinaryWidget {
         super(context, prompt);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, GOOGLE_MAP_KEY);
+        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, MAPBOX_MAPS);
 
         answerDisplay = getCenteredAnswerTextView();
 

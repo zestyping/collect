@@ -306,6 +306,7 @@
     <string name="password_error_whitespace">Leading or trailing whitespace not allowed in passwords</string>
     <string name="username_error_whitespace">Leading or trailing whitespace not allowed in usernames</string>
     <string name="google_play_services_error_occured">Unable to access Google Maps. Is Google Play Services installed?</string>
+    <string name="mapbox_error_occured">Unable to load Mapbox map</string>
     <string name="about_preferences">About</string>
     <string name="tell_your_friends">Share ODK Collect</string>
     <string name="tell_your_friends_msg">Are your colleagues still collecting data on paper? Share ODK Collect with them.</string>
@@ -317,6 +318,7 @@
     <string name="map_sdk_behavior">Mapping SDK</string>
     <string name="google_maps_sdk">Google Maps SDK</string>
     <string name="openstreetmap_sdk">OpenStreetMap SDK</string>
+    <string name="mapbox_maps_sdk">Mapbox Maps SDK</string>
     <string name="show_map_sdk">Show Map SDK Options</string>
     <string name="openmap_streets">OSM Streets</string>
     <string name="openmap_usgs_topo">USGS National Map Topo</string>
@@ -331,6 +333,18 @@
     <string name="satellite">Satellite</string>
     <string name="map_basemap_selector_title">Basemaps</string>
     <string name="show_map_basemap">Show Basemap Options</string>
+
+    <string name="mapbox_streets">Mapbox Streets</string>
+    <string name="mapbox_light">Mapbox Light</string>
+    <string name="mapbox_dark">Mapbox Dark</string>
+    <string name="mapbox_satellite">Mapbox Satellite</string>
+    <string name="mapbox_satellite_streets">Mapbox Satellite Streets</string>
+    <string name="mapbox_outdoors">Mapbox Outdoors</string>
+
+    <!--Mapbox LocationComponent permission toast messages-->
+    <string name="user_location_permission_explanation">This app needs location permissions in order to show its functionality.</string>
+    <string name="user_location_permission_not_granted">You didn\'t grant location permissions.</string>
+    <string name="cannot_find_location">Can\'t find your location</string>
 
     <string name="save_point">Save GeoPoint</string>
     <string name="get_point">Start GeoPoint</string>
@@ -620,6 +634,7 @@
     <string name="storage_runtime_permission_denied_desc">Without these permissions Collect can\'t access your forms or save answers. Reopen the app when you are ready to grant them.</string>
     <string name="location_runtime_permissions_denied_title">Location permissions</string>
     <string name="location_runtime_permissions_denied_desc">Without these permissions Collect can\'t record your location. Please try again when you are ready to grant them.</string>
+    <string name="could_not_get_location">Couldn\'t retrieve the device\'s location.</string>
     <string name="camera_runtime_permission_denied_title">Camera permission</string>
     <string name="camera_runtime_permission_denied_desc">Without this permission Collect can\'t access the camera. Please try again when you are ready to grant it.</string>
     <string name="record_audio_runtime_permission_denied_title">Record audio permission</string>

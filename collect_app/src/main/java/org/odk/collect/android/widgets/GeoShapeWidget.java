@@ -45,6 +45,7 @@ public class GeoShapeWidget extends QuestionWidget implements BinaryWidget {
 
     public static final String SHAPE_LOCATION = "gp";
     public static final String GOOGLE_MAP_KEY = "google_maps";
+    public static final String MAPBOX_MAPS = "mapbox";
     public SharedPreferences sharedPreferences;
     public String mapSDK;
     private final Button createShapeButton;
@@ -55,7 +56,7 @@ public class GeoShapeWidget extends QuestionWidget implements BinaryWidget {
         // assemble the widget...
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, GOOGLE_MAP_KEY);
+        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, MAPBOX_MAPS);
 
         answerDisplay = getCenteredAnswerTextView();
 

@@ -31,6 +31,7 @@ import android.preference.PreferenceManager;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
@@ -54,6 +55,15 @@ public class MapHelper {
     private static SharedPreferences sharedPreferences;
     private static String[] offilineOverlays;
     private static final String NO_FOLDER_KEY = "None";
+    private MapboxMap mapboxMap;
+
+    // MAPBOX MAPS BASEMAPS
+    private static final String MAPBOX_MAP_STREETS = "mapbox_streets";
+    private static final String MAPBOX_MAP_LIGHT = "mapbox_light";
+    private static final String MAPBOX_MAP_DARK = "mapbox_dark";
+    private static final String MAPBOX_MAP_SATELLITE = "mapbox_satellite";
+    private static final String MAPBOX_MAP_SATELLITE_STREETS = "mapbox_satellite_streets";
+    private static final String MAPBOX_MAP_OUTDOORS = "mapbox_outdoors";
 
     // GOOGLE MAPS BASEMAPS
     private static final String GOOGLE_MAP_STREETS = "streets";
@@ -73,12 +83,23 @@ public class MapHelper {
 
     private TilesOverlay osmTileOverlay;
     private TileOverlay googleTileOverlay;
+    private TileOverlay mapboxMapTileOverlay;
     private IRegisterReceiver iregisterReceiver;
 
     private final GoogleMap googleMap;
     private final MapView osmMap;
     private final org.odk.collect.android.spatial.TileSourceFactory tileFactory;
     private final Context context;
+
+    public MapHelper(Context context, MapboxMap mapboxMap) {
+        this.context = context;
+        this.googleMap = null;
+        osmMap = null;
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        offilineOverlays = getOfflineLayerList();
+        this.mapboxMap = mapboxMap;
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
+    }
 
     public MapHelper(Context context, GoogleMap googleMap, Integer selectedLayer) {
         this.context = context;
@@ -236,6 +257,9 @@ public class MapHelper {
                         googleTileOverlay.remove();
                     }
 
+                }
+                else if (mapboxMap != null) {
+                    mapboxMapTileOverlay.remove();
                 } else {
                     //OSM
                     if (osmTileOverlay != null) {
@@ -268,7 +292,11 @@ public class MapHelper {
                             } catch (Exception e) {
                                 break;
                             }
-                        } else {
+                        }
+                        else if (mapboxMap != null) {
+                            // TODO: Add tileoverlay?
+
+                        }    else {
                             if (osmTileOverlay != null) {
                                 osmMap.getOverlays().remove(osmTileOverlay);
                                 osmMap.invalidate();

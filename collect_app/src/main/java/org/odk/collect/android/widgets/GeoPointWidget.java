@@ -59,6 +59,8 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
 
     public static final double DEFAULT_LOCATION_ACCURACY = 5.0;
     private static final String GOOGLE_MAP_KEY = "google_maps";
+    private static final String OSM_MAP_KEY = "osmdroid";
+    public static final String MAPBOX_MAPS = "mapbox";
     private final boolean readOnly;
     private final boolean useMapsV2;
     private final Button getLocationButton;
@@ -98,7 +100,7 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, GOOGLE_MAP_KEY);
+        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, MAPBOX_MAPS);
 
         readOnly = prompt.isReadOnly();
 

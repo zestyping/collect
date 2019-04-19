@@ -85,7 +85,20 @@ To run functionality that makes API calls from your debug-signed builds, you may
 
 **Google Drive and Sheets APIs** - Follow the instructions in the "Generate the signing certificate fingerprint and register your application" section from [here](https://developers.google.com/drive/android/auth). Enable the Google Drive API [here](https://console.developers.google.com/apis/api/drive.googleapis.com). Enable the Google Sheets API [here](https://console.developers.google.com/apis/api/sheets.googleapis.com).
 
-**Google Maps API** - Getting a Google Maps API key now requires providing a credit card number. As of October 2018, there is some free API usage provided and the card will not be charged without explicit user approval. You should carefully read the terms before providing a credit card number. Once you have created a billing account, follow the instructions [here](https://developers.google.com/maps/documentation/android-api/signup) and paste your key in the `AndroidManifest` as the value for `com.google.android.geo.API_KEY`. Please be sure not to commit your personal API key to a branch that you will submit a pull request for.
+**Google Maps API** - Getting a Google Maps API key now requires providing a credit card number. As of October 2018, there is some free API usage provided and the card will not be charged without explicit user approval. You should carefully read the terms before providing a credit card number. Once you have created a billing account, follow the instructions [here](https://developers.google.com/maps/documentation/android-api/signup) and paste your key in the `AndroidManifest` as the value for `com.google.android.geo.API_KEY`. _**Please be sure not to commit your personal API key to a branch that you will submit a pull request for.**_
+
+**Mapbox Maps SDK for Android** – If you want to use Mapbox services within your fork of ODK Collect, you will need to [create a Mapbox account](https://www.mapbox.com/signup/) in order to have a Mapbox access token. Opening a Mapbox account on the 'Pay-As-You-Go' plan does not require a credit card. Mapbox provides free API usage up to the monthly thresholds documented at [https://www.mapbox.com/pricing](https://www.mapbox.com/pricing) (e.g. below 50,000 monthly active users is free). If your usage exceeds any of these thresholds, you will receive an automatic email with instructions on how to add a credit card to pay for the services. Services will remain live until the end of the 30-day billing term, after which point the account will be deactivated and requires a credit card to reactivate.
+
+Once you have created a Mapbox account, find your access token as described [here](https://www.mapbox.com/help/define-access-token/)
+Create a XML file with the following path in the Collect app: `collect_app/src/main/res/values/dev-config.xml`. Then add a String resource to the `dev-config.xml` file:
+
+`<string name="mbx_access_token" translatable="false">PASTE_YOUR_MAPBOX_TOKEN_HERE</string>`
+
+This `dev-config.xml` file is already added to this repo's `.gitignore` file, so you should not see git capturing your Mapbox token addition. The `mbx_access_token` String resource used in the `untranslated.xml` file. You don't need to make any other adjustments. Nonetheless, **please be sure not to commit your personal access token to a branch that you will submit a pull request for.**
+
+Learn more about Mapbox access tokens [here](https://www.mapbox.com/help/how-access-tokens-work/) and Mapbox terms of service [here](https://www.mapbox.com/tos/).
+
+If you are creating a fork of ODK Collect for a non-profit organization or positive impact project, you can contact [the Mapbox Community team](https://www.mapbox.com/community/) with any questions about using Mapbox. If you are creating a fork of ODK Collect for a commercial enterprise and have questions about pricing or terms, you can contact [the Mapbox Sales team](https://www.mapbox.com/contact/sales/).
 
 
 ## Debugging JavaRosa

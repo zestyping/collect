@@ -27,6 +27,7 @@ import org.odk.collect.android.R;
 import org.odk.collect.android.map.GoogleMapFragment;
 import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
+import org.odk.collect.android.map.MapboxMapFragment;
 import org.odk.collect.android.map.OsmMapFragment;
 import org.odk.collect.android.preferences.GeneralKeys;
 import org.odk.collect.android.spatial.MapHelper;
@@ -48,6 +49,8 @@ import static org.odk.collect.android.utilities.PermissionUtils.areLocationPermi
  */
 public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegisterReceiver {
     public static final String PREF_VALUE_GOOGLE_MAPS = "google_maps";
+    public static final String PREF_VALUE_OSM_MAPS = "osm";
+    public static final String PREF_VALUE_MAPBOX_MAPS = "mapbox";
     public static final String MAP_CENTER_KEY = "map_center";
     public static final String MAP_ZOOM_KEY = "map_zoom";
     public static final String POINT_KEY = "point";
@@ -131,9 +134,15 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
     }
 
     public MapFragment createMapFragment() {
-        String mapSdk = getIntent().getStringExtra(GeneralKeys.KEY_MAP_SDK);
-        return (mapSdk == null || mapSdk.equals(PREF_VALUE_GOOGLE_MAPS)) ?
-            new GoogleMapFragment() : new OsmMapFragment();
+        switch (getIntent().getStringExtra(GeneralKeys.KEY_MAP_SDK)) {
+            case PREF_VALUE_GOOGLE_MAPS:
+                return new GoogleMapFragment();
+            case PREF_VALUE_OSM_MAPS:
+                return new OsmMapFragment();
+            case PREF_VALUE_MAPBOX_MAPS:
+            default:
+                return new MapboxMapFragment();
+        }
     }
 
     @Override protected void onStart() {
@@ -231,12 +240,14 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
 
         if (map instanceof GoogleMapFragment) {
             helper = new MapHelper(this, ((GoogleMapFragment) map).getGoogleMap(), selectedLayer);
+        } else if (map instanceof MapboxMapFragment) {
+            helper = new MapHelper(this, ((MapboxMapFragment) map).getMapboxMap());
         } else if (map instanceof OsmMapFragment) {
             helper = new MapHelper(this, ((OsmMapFragment) map).getMapView(), this, selectedLayer);
-        } else {
-            throw new AssertionError("newMapFragment has unknown type");
         }
-        helper.setBasemap();
+        if (!(map instanceof MapboxMapFragment)) {
+            helper.setBasemap();
+        }
 
         ImageButton acceptLocation = findViewById(R.id.accept_location);
         acceptLocation.setOnClickListener(v -> returnLocation());
