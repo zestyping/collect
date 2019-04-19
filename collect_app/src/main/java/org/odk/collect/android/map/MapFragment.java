@@ -91,13 +91,13 @@ public interface MapFragment {
     void zoomToBoundingBox(Iterable<MapPoint> points, double scaleFactor, boolean animate);
 
     /**
-     * Adds a marker to the map at the given location.  If draggable is true,
-     * the user will be able to drag the marker to change its location.
+     * Adds a symbol to the map at the given location.  If draggable is true,
+     * the user will be able to drag the symbol to change its location.
      * Returns a positive integer, the featureId for the newly added shape.
      */
     int addMarker(MapPoint point, boolean draggable);
 
-    /** Gets the location of an existing marker. */
+    /** Gets the location of an existing symbol. */
     MapPoint getMarkerPoint(int featureId);
 
     /**

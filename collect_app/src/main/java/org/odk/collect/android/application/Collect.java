@@ -34,6 +34,7 @@ import com.evernote.android.job.JobManagerCreateException;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
 
@@ -256,6 +257,13 @@ public class Collect extends Application {
         }
 
         setupLeakCanary();
+
+        // Initializing the Mapbox Maps SDK for Android with a Mapbox access token.
+        // Create a Mapbox account and retrieve your token at mapbox.com/account/access-tokens.
+        // Then read https://github.com/opendatakit/collect#using-apis-for-local-development
+        // for further instructions. Don't paste your token below at risk of accidentally
+        // pushing it to Github
+        Mapbox.getInstance(this, BuildConfig.MAPBOX_ACCESS_TOKEN);
     }
 
     private void setupDagger() {

@@ -39,7 +39,10 @@ import java.util.TreeMap;
 import timber.log.Timber;
 
 import static android.app.Activity.RESULT_CANCELED;
+import static android.content.Context.MODE_PRIVATE;
 import static org.odk.collect.android.preferences.GeneralKeys.GOOGLE_MAPS_BASEMAP_DEFAULT;
+import static org.odk.collect.android.preferences.GeneralKeys.GOOGLE_MAPS_BASEMAP_KEY;
+
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_APP_LANGUAGE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_APP_THEME;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_FONT_SIZE;
@@ -49,7 +52,11 @@ import static org.odk.collect.android.preferences.GeneralKeys.KEY_NAVIGATION;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_SPLASH_PATH;
 import static org.odk.collect.android.preferences.GeneralKeys.OSM_BASEMAP_KEY;
 import static org.odk.collect.android.preferences.GeneralKeys.OSM_MAPS_BASEMAP_DEFAULT;
+import static org.odk.collect.android.preferences.GeneralKeys.MAPBOX_MAPS_BASEMAP_DEFAULT;
+import static org.odk.collect.android.preferences.GeneralKeys.DESIRED_MAP_STYLE_KEY;
 import static org.odk.collect.android.preferences.PreferencesActivity.INTENT_KEY_ADMIN_MODE;
+
+
 
 public class UserInterfacePreferences extends BasePreferenceFragment {
 
@@ -198,9 +205,12 @@ public class UserInterfacePreferences extends BasePreferenceFragment {
         if (mapSdk.getValue().equals(OSM_BASEMAP_KEY)) {
             onlineLayerEntryValues = getResources().getStringArray(R.array.map_osm_basemap_selector_entry_values);
             onlineLayerEntries = getResources().getStringArray(R.array.map_osm_basemap_selector_entries);
-        } else {
+        } else if (mapSdk.getValue().equals(GOOGLE_MAPS_BASEMAP_KEY)) {
             onlineLayerEntryValues = getResources().getStringArray(R.array.map_google_basemap_selector_entry_values);
             onlineLayerEntries = getResources().getStringArray(R.array.map_google_basemap_selector_entries);
+        } else {
+            onlineLayerEntryValues = getResources().getStringArray(R.array.map_mapbox_basemap_selector_entry_values);
+            onlineLayerEntries = getResources().getStringArray(R.array.map_mapbox_basemap_selector_entries);
         }
         mapBasemap.setEntryValues(ObjectArrays.concat(onlineLayerEntryValues, MapHelper.getOfflineLayerListWithTags(), String.class));
         mapBasemap.setEntries(ObjectArrays.concat(onlineLayerEntries, MapHelper.getOfflineLayerListWithTags(), String.class));
@@ -211,14 +221,18 @@ public class UserInterfacePreferences extends BasePreferenceFragment {
             String[] onlineLayerEntries1;
 
             int index = ((ListPreference) preference).findIndexOfValue(newValue.toString());
-            if (index == 0) { // Google Maps
-                onlineLayerEntryValues1 = getResources().getStringArray(R.array.map_google_basemap_selector_entry_values);
-                onlineLayerEntries1 = getResources().getStringArray(R.array.map_google_basemap_selector_entries);
-                mapBasemap.setValue(GOOGLE_MAPS_BASEMAP_DEFAULT);
-            } else { // OSM Maps
+            if (index == 0) { // Mapbox Maps
+                onlineLayerEntryValues1 = getResources().getStringArray(R.array.map_mapbox_basemap_selector_entry_values);
+                onlineLayerEntries1 = getResources().getStringArray(R.array.map_mapbox_basemap_selector_entries);
+                mapBasemap.setValue(MAPBOX_MAPS_BASEMAP_DEFAULT);
+            } else if (index == 1) { // OSM Maps
                 onlineLayerEntryValues1 = getResources().getStringArray(R.array.map_osm_basemap_selector_entry_values);
                 onlineLayerEntries1 = getResources().getStringArray(R.array.map_osm_basemap_selector_entries);
                 mapBasemap.setValue(OSM_MAPS_BASEMAP_DEFAULT);
+            } else { // Google Maps
+                onlineLayerEntryValues1 = getResources().getStringArray(R.array.map_google_basemap_selector_entry_values);
+                onlineLayerEntries1 = getResources().getStringArray(R.array.map_google_basemap_selector_entries);
+                mapBasemap.setValue(GOOGLE_MAPS_BASEMAP_DEFAULT);
             }
 
             mapBasemap.setEntryValues(ObjectArrays.concat(onlineLayerEntryValues1, MapHelper.getOfflineLayerListWithTags(), String.class));
@@ -240,6 +254,11 @@ public class UserInterfacePreferences extends BasePreferenceFragment {
         mapBasemap.setOnPreferenceChangeListener((preference, newValue) -> {
             int index = ((ListPreference) preference).findIndexOfValue(newValue.toString());
             preference.setSummary(((ListPreference) preference).getEntries()[index]);
+            SharedPreferences sharedPref = getActivity().getApplicationContext()
+                .getSharedPreferences("desiredStyle", MODE_PRIVATE);
+            SharedPreferences.Editor edit = sharedPref.edit();
+            edit.putString(DESIRED_MAP_STYLE_KEY,
+                ((ListPreference) preference).getEntries()[index].toString()).apply();
             return true;
         });
     }

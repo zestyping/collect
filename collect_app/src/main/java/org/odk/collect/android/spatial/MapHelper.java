@@ -20,6 +20,7 @@ package org.odk.collect.android.spatial;
  * @author jonnordling@gmail.com
  */
 
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -31,6 +32,7 @@ import android.preference.PreferenceManager;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
@@ -52,8 +54,17 @@ public class MapHelper {
     private static final String SLASH = File.separator;
 
     private static SharedPreferences sharedPreferences;
-    private static String[] offilineOverlays;
+    private static String[] offlineOverlays;
     private static final String NO_FOLDER_KEY = "None";
+    private MapboxMap mapboxMap;
+
+    // MAPBOX MAPS BASEMAPS
+    private static final String MAPBOX_MAP_STREETS = "mapbox_streets";
+    private static final String MAPBOX_MAP_LIGHT = "mapbox_light";
+    private static final String MAPBOX_MAP_DARK = "mapbox_dark";
+    private static final String MAPBOX_MAP_SATELLITE = "mapbox_satellite";
+    private static final String MAPBOX_MAP_SATELLITE_STREETS = "mapbox_satellite_streets";
+    private static final String MAPBOX_MAP_OUTDOORS = "mapbox_outdoors";
 
     // GOOGLE MAPS BASEMAPS
     private static final String GOOGLE_MAP_STREETS = "streets";
@@ -73,6 +84,7 @@ public class MapHelper {
 
     private TilesOverlay osmTileOverlay;
     private TileOverlay googleTileOverlay;
+    private TileOverlay mapboxMapTileOverlay;
     private IRegisterReceiver iregisterReceiver;
 
     private final GoogleMap googleMap;
@@ -80,11 +92,21 @@ public class MapHelper {
     private final org.odk.collect.android.spatial.TileSourceFactory tileFactory;
     private final Context context;
 
+    public MapHelper(Context context, MapboxMap mapboxMap) {
+        this.context = context;
+        this.googleMap = null;
+        osmMap = null;
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        offlineOverlays = getOfflineLayerList();
+        this.mapboxMap = mapboxMap;
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
+    }
+
     public MapHelper(Context context, GoogleMap googleMap, Integer selectedLayer) {
         this.context = context;
         osmMap = null;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        offilineOverlays = getOfflineLayerList();
+        offlineOverlays = getOfflineLayerList();
         this.googleMap = googleMap;
         tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
         this.selectedLayer = selectedLayer == null ? 0 : selectedLayer;
@@ -94,7 +116,7 @@ public class MapHelper {
         this.context = context;
         googleMap = null;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        offilineOverlays = getOfflineLayerList();
+        offlineOverlays = getOfflineLayerList();
         this.iregisterReceiver = iregisterReceiver;
         this.osmMap = osmMap;
         tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
@@ -111,9 +133,9 @@ public class MapHelper {
 
     public void setBasemap() {
         if (googleMap != null) {
-            String basemap = selectedLayer == 0 || selectedLayer >= offilineOverlays.length
+            String basemap = selectedLayer == 0 || selectedLayer >= offlineOverlays.length
                     ? getGoogleBasemap()
-                    : offilineOverlays[selectedLayer];
+                    : offlineOverlays[selectedLayer];
             switch (basemap) {
                 case GOOGLE_MAP_STREETS:
                     googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -131,15 +153,14 @@ public class MapHelper {
                     if (!useOfflineBasemapIfAvailable(basemap)) {
                         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                     }
-
                     break;
             }
         } else if (osmMap != null) {
             //OSMMAP
             ITileSource tileSource = null;
-            String basemap = selectedLayer == 0 || selectedLayer >= offilineOverlays.length
+            String basemap = selectedLayer == 0 || selectedLayer >= offlineOverlays.length
                     ? getOsmBasemap()
-                    : offilineOverlays[selectedLayer];
+                    : offlineOverlays[selectedLayer];
             switch (basemap) {
                 case OPENMAP_USGS_TOPO:
                     tileSource = tileFactory.getUSGSTopo();
@@ -183,8 +204,8 @@ public class MapHelper {
         if (basemap.contains(OFFLINE_LAYER_TAG)) {
             basemap = basemap.substring(0, basemap.indexOf(OFFLINE_LAYER_TAG));
         }
-        if (Arrays.asList(offilineOverlays).contains(basemap)) {
-            setOfflineBasemap(Arrays.asList(offilineOverlays).indexOf(basemap));
+        if (Arrays.asList(offlineOverlays).contains(basemap)) {
+            setOfflineBasemap(Arrays.asList(offlineOverlays).indexOf(basemap));
             return true;
         }
         return false;
@@ -220,7 +241,7 @@ public class MapHelper {
     public void showLayersDialog() {
         AlertDialog.Builder layerDialod = new AlertDialog.Builder(context);
         layerDialod.setTitle(context.getString(R.string.select_offline_layer));
-        layerDialod.setSingleChoiceItems(offilineOverlays,
+        layerDialod.setSingleChoiceItems(offlineOverlays,
                 selectedLayer, (dialog, item) -> {
                     setOfflineBasemap(item);
                     dialog.dismiss();
@@ -236,6 +257,9 @@ public class MapHelper {
                         googleTileOverlay.remove();
                     }
 
+                }
+                else if (mapboxMap != null) {
+                    mapboxMapTileOverlay.remove();
                 } else {
                     //OSM
                     if (osmTileOverlay != null) {
@@ -268,7 +292,11 @@ public class MapHelper {
                             } catch (Exception e) {
                                 break;
                             }
-                        } else {
+                        }
+                        else if (mapboxMap != null) {
+                            // TODO: Add tileoverlay?
+
+                        }    else {
                             if (osmTileOverlay != null) {
                                 osmMap.getOverlays().remove(osmTileOverlay);
                                 osmMap.invalidate();
@@ -291,7 +319,7 @@ public class MapHelper {
     }
 
     private File[] getFileFromSelectedItem(int item) {
-        File directory = new File(Collect.OFFLINE_LAYERS + SLASH + offilineOverlays[item]);
+        File directory = new File(Collect.OFFLINE_LAYERS + SLASH + offlineOverlays[item]);
         return directory.listFiles((dir, filename) -> filename.toLowerCase(Locale.US).endsWith(".mbtiles"));
     }
 

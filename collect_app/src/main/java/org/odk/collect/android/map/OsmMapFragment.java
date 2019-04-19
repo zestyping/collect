@@ -411,7 +411,7 @@ public class OsmMapFragment extends Fragment implements MapFragment,
     protected Marker createMarker(MapView map, MapPoint point, MapFeature feature) {
         // A Marker's position is a GeoPoint with latitude, longitude, and
         // altitude fields.  We need to store the standard deviation value
-        // somewhere, so it goes in the marker's sub-description field.
+        // somewhere, so it goes in the symbol's sub-description field.
         Marker marker = new Marker(map);
         marker.setPosition(toGeoPoint(point));
         marker.setSubDescription(Double.toString(point.sd));
@@ -423,7 +423,7 @@ public class OsmMapFragment extends Fragment implements MapFragment,
             @Override public void onMarkerDragStart(Marker marker) { }
 
             @Override public void onMarkerDrag(Marker marker) {
-                // When a marker is manually dragged, the position is no longer
+                // When a symbol is manually dragged, the position is no longer
                 // obtained from a GPS reading, so the standard deviation field
                 // is no longer meaningful; reset it to zero.
                 marker.setSubDescription("0");
@@ -439,14 +439,14 @@ public class OsmMapFragment extends Fragment implements MapFragment,
             }
         });
 
-        // Prevent the text bubble from appearing when a marker is clicked.
+        // Prevent the text bubble from appearing when a symbol is clicked.
         marker.setOnMarkerClickListener((unusedMarker, unusedMap) -> false);
 
         map.getOverlays().add(marker);
         return marker;
     }
 
-    /** Finds the feature to which the given marker belongs. */
+    /** Finds the feature to which the given symbol belongs. */
     protected int findFeature(Marker marker) {
         for (int featureId : features.keySet()) {
             if (features.get(featureId).ownsMarker(marker)) {
@@ -474,7 +474,7 @@ public class OsmMapFragment extends Fragment implements MapFragment,
      * (e.g. geometric elements, handles for manipulation, etc.).
      */
     interface MapFeature {
-        /** Returns true if the given marker belongs to this feature. */
+        /** Returns true if the given symbol belongs to this feature. */
         boolean ownsMarker(Marker marker);
 
         /** Updates the feature's geometry after any UI handles have moved. */
@@ -484,7 +484,7 @@ public class OsmMapFragment extends Fragment implements MapFragment,
         void dispose();
     }
 
-    /** A marker that can optionally be dragged by the user. */
+    /** A symbol that can optionally be dragged by the user. */
     protected class MarkerFeature implements MapFeature {
         final MapView map;
         Marker marker;
@@ -510,7 +510,7 @@ public class OsmMapFragment extends Fragment implements MapFragment,
         }
     }
 
-    /** A polyline or polygon that can be manipulated by dragging markers at its vertices. */
+    /** A polyline or polygon that can be manipulated by dragging symbolOptionsList at its vertices. */
     protected class PolyFeature implements MapFeature {
         final MapView map;
         final List<Marker> markers = new ArrayList<>();

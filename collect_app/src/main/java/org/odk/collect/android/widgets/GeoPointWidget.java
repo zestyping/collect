@@ -23,6 +23,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ConfigurationInfo;
 import android.preference.PreferenceManager;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -39,7 +40,6 @@ import org.odk.collect.android.utilities.PlayServicesUtil;
 import org.odk.collect.android.widgets.interfaces.BinaryWidget;
 
 import java.text.DecimalFormat;
-import java.util.Locale;
 
 import static org.odk.collect.android.utilities.ApplicationConstants.RequestCodes;
 
@@ -59,10 +59,12 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
 
     public static final double DEFAULT_LOCATION_ACCURACY = 5.0;
     private static final String GOOGLE_MAP_KEY = "google_maps";
-    private final boolean readOnly;
-    private final boolean useMapsV2;
+    private static final String OSM_MAP_KEY = "osmdroid";
+    public static final String MAPBOX_MAPS = "mapbox";
     private final Button getLocationButton;
     private final Button viewButton;
+    private final boolean readOnly;
+    private final boolean useMapsV2;
     private final String mapSDK;
     private final TextView answerDisplay;
     private boolean useMaps;
@@ -87,10 +89,10 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
 
         // use mapsV2 if it is available and was requested;
         useMapsV2 = useMapsV2(context);
-        if (appearance != null && appearance.toLowerCase(Locale.US).contains("placement-map") && useMapsV2) {
+        if (appearance != null && appearance.equalsIgnoreCase("placement-map") && useMapsV2) {
             draggable = true;
             useMaps = true;
-        } else if (appearance != null && appearance.toLowerCase(Locale.US).contains("maps") && useMapsV2) {
+        } else if (appearance != null && appearance.equalsIgnoreCase("maps") && useMapsV2) {
             draggable = false;
             useMaps = true;
         } else {
@@ -98,7 +100,7 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, GOOGLE_MAP_KEY);
+        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, MAPBOX_MAPS);
 
         readOnly = prompt.isReadOnly();
 
@@ -138,11 +140,11 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
             if (readOnly) {
                 //READ_ONLY View
                 getLocationButton.setText(
-                        getContext().getString(R.string.geopoint_view_read_only));
+                    getContext().getString(R.string.geopoint_view_read_only));
             } else {
                 if (stringAnswer != null && !stringAnswer.isEmpty()) {
                     getLocationButton.setText(
-                            getContext().getString(R.string.view_change_location));
+                        getContext().getString(R.string.view_change_location));
                 } else {
                     getLocationButton.setText(getContext().getString(R.string.get_point));
                 }
@@ -150,7 +152,7 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
         } else {
             if (!readOnly) {
                 getLocationButton.setText(getContext().getString(
-                        dataAvailable ? R.string.change_location : R.string.get_point));
+                    dataAvailable ? R.string.change_location : R.string.get_point));
             }
 
             if (useMaps) {
@@ -201,7 +203,7 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
         String location = Double.toString(coordinates);
         String degreeSign = "°";
         String degree = location.substring(0, location.indexOf('.'))
-                + degreeSign;
+            + degreeSign;
         location = "0." + location.substring(location.indexOf('.') + 1);
         double temp = Double.valueOf(location) * 60;
         location = Double.toString(temp);
@@ -214,21 +216,29 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
         if (type.equalsIgnoreCase("lon")) {
             if (degree.startsWith("-")) {
                 degree = String.format(getContext()
-                        .getString(R.string.west), degree.replace("-", ""), mins, secs);
+                    .getString(R.string.west), degree.replace("-", ""), mins, secs);
             } else {
                 degree = String.format(getContext()
-                        .getString(R.string.east), degree.replace("-", ""), mins, secs);
+                    .getString(R.string.east), degree.replace("-", ""), mins, secs);
             }
         } else {
             if (degree.startsWith("-")) {
                 degree = String.format(getContext()
-                        .getString(R.string.south), degree.replace("-", ""), mins, secs);
+                    .getString(R.string.south), degree.replace("-", ""), mins, secs);
             } else {
                 degree = String.format(getContext()
-                        .getString(R.string.north), degree.replace("-", ""), mins, secs);
+                    .getString(R.string.north), degree.replace("-", ""), mins, secs);
             }
         }
         return degree;
+    }
+
+    @Override
+    public void setFocus(Context context) {
+        // Hide the soft keyboard if it's showing.
+        InputMethodManager inputManager = (InputMethodManager) context
+            .getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(this.getWindowToken(), 0);
     }
 
     @Override
@@ -239,9 +249,9 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
             stringAnswer = s;
             String[] sa = s.split(" ");
             answerDisplay.setText(String.format(getContext().getString(R.string.gps_result),
-                    formatGps(Double.parseDouble(sa[0]), "lat"),
-                    formatGps(Double.parseDouble(sa[1]), "lon"), truncateDouble(sa[2]),
-                    truncateDouble(sa[3])));
+                formatGps(Double.parseDouble(sa[0]), "lat"),
+                formatGps(Double.parseDouble(sa[1]), "lon"), truncateDouble(sa[2]),
+                truncateDouble(sa[3])));
         } else {
             stringAnswer = s;
             answerDisplay.setText("");
@@ -267,9 +277,9 @@ public class GeoPointWidget extends QuestionWidget implements BinaryWidget {
 
     private boolean useMapsV2(final Context context) {
         final ActivityManager activityManager = (ActivityManager) context.getSystemService(
-                Context.ACTIVITY_SERVICE);
+            Context.ACTIVITY_SERVICE);
         final ConfigurationInfo configurationInfo =
-                activityManager.getDeviceConfigurationInfo();
+            activityManager.getDeviceConfigurationInfo();
         return configurationInfo.reqGlEsVersion >= 0x20000;
     }
 

@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -45,17 +46,18 @@ public class GeoShapeWidget extends QuestionWidget implements BinaryWidget {
 
     public static final String SHAPE_LOCATION = "gp";
     public static final String GOOGLE_MAP_KEY = "google_maps";
-    public SharedPreferences sharedPreferences;
-    public String mapSDK;
+    public static final String MAPBOX_MAPS = "mapbox";
     private final Button createShapeButton;
     private final TextView answerDisplay;
+    public SharedPreferences sharedPreferences;
+    public String mapSDK;
 
     public GeoShapeWidget(Context context, FormEntryPrompt prompt) {
         super(context, prompt);
         // assemble the widget...
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, GOOGLE_MAP_KEY);
+        mapSDK = sharedPreferences.getString(GeneralKeys.KEY_MAP_SDK, MAPBOX_MAPS);
 
         answerDisplay = getCenteredAnswerTextView();
 
@@ -92,7 +94,7 @@ public class GeoShapeWidget extends QuestionWidget implements BinaryWidget {
     private void updateButtonLabelsAndVisibility(boolean dataAvailable) {
         if (dataAvailable) {
             createShapeButton.setText(
-                    getContext().getString(R.string.geoshape_view_change_location));
+                getContext().getString(R.string.geoshape_view_change_location));
         } else {
             createShapeButton.setText(getContext().getString(R.string.get_shape));
         }
@@ -109,14 +111,21 @@ public class GeoShapeWidget extends QuestionWidget implements BinaryWidget {
         String s = answerDisplay.getText().toString();
 
         return !s.isEmpty()
-                ? new StringData(s)
-                : null;
+            ? new StringData(s)
+            : null;
     }
 
     @Override
     public void clearAnswer() {
         answerDisplay.setText(null);
         updateButtonLabelsAndVisibility(false);
+    }
+
+    @Override
+    public void setFocus(Context context) {
+        InputMethodManager inputManager = (InputMethodManager) context
+            .getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(this.getWindowToken(), 0);
     }
 
     @Override

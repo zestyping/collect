@@ -19,6 +19,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -33,6 +34,7 @@ import org.odk.collect.android.R;
 import org.odk.collect.android.map.GoogleMapFragment;
 import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
+import org.odk.collect.android.map.MapboxMapFragment;
 import org.odk.collect.android.map.OsmMapFragment;
 import org.odk.collect.android.preferences.GeneralKeys;
 import org.odk.collect.android.spatial.MapHelper;
@@ -51,6 +53,8 @@ import static org.odk.collect.android.utilities.PermissionUtils.areLocationPermi
 
 public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterReceiver {
     public static final String PREF_VALUE_GOOGLE_MAPS = "google_maps";
+    public static final String PREF_VALUE_MAPBOX_MAPS = "mapbox_maps";
+    public static final String PREF_VALUE_OSM_MAPS = "osm";
     public static final String ANSWER_KEY = "answer";
     public static final String OUTPUT_MODE_KEY = "output_mode";
     public static final String MAP_CENTER_KEY = "map_center";
@@ -111,6 +115,7 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
     private MapPoint restoredMapCenter;
     private Double restoredMapZoom;
     private List<MapPoint> restoredPoints;
+    private String TAG = "GeoPolyActivity";
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,13 +142,23 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
         setTitle(getString(outputMode == OutputMode.GEOTRACE ?
             R.string.geotrace_title : R.string.geoshape_title));
         setContentView(R.layout.geopoly_layout);
-        createMapFragment().addTo(this, R.id.map_container, this::initMap);
+        MapFragment mapFragment = createMapFragment();
+        mapFragment.addTo(this, R.id.map_container, this::initMap);
+
     }
 
     public MapFragment createMapFragment() {
         String mapSdk = getIntent().getStringExtra(GeneralKeys.KEY_MAP_SDK);
-        return (mapSdk == null || mapSdk.equals(PREF_VALUE_GOOGLE_MAPS)) ?
-            new GoogleMapFragment() : new OsmMapFragment();
+        switch (mapSdk) {
+            case PREF_VALUE_GOOGLE_MAPS:
+                return new GoogleMapFragment();
+            case PREF_VALUE_MAPBOX_MAPS:
+                return new MapboxMapFragment();
+            case PREF_VALUE_OSM_MAPS:
+                return new OsmMapFragment();
+            default:
+                return new MapboxMapFragment();
+        }
     }
 
     @Override protected void onStart() {
@@ -207,6 +222,7 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
             return;
         }
         if (newMapFragment.getFragment().getActivity() == null) {
+            Log.d(TAG, "initMap: newMapFragment.getFragment().getActivity() == null");
             // If the screen is rotated just after the activity starts but
             // before initMap() is called, then when the activity is re-created
             // in the new orientation, initMap() can sometimes be called on the
@@ -218,10 +234,15 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
         map = newMapFragment;
         if (map instanceof GoogleMapFragment) {
             helper = new MapHelper(this, ((GoogleMapFragment) map).getGoogleMap(), selectedLayer);
+        } else if (map instanceof MapboxMapFragment) {
+            helper = new MapHelper(this, ((MapboxMapFragment) map).getMapboxMap());
         } else if (map instanceof OsmMapFragment) {
             helper = new MapHelper(this, ((OsmMapFragment) map).getMapView(), this, selectedLayer);
         }
-        helper.setBasemap();
+
+        if (!(map instanceof MapboxMapFragment)) {
+            helper.setBasemap();
+        }
 
         locationStatus = findViewById(R.id.location_status);
         collectionStatus = findViewById(R.id.collection_status);

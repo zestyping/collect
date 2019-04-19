@@ -87,14 +87,24 @@ the specific language governing permissions and limitations under the License. -
         <item>@string/image_size_large</item>
     </string-array>
     <string-array name="map_sdk_selector_entries">
-        <item>@string/google_maps_sdk</item>
+        <item>@string/mapbox_maps_sdk</item>
         <item>@string/openstreetmap_sdk</item>
+        <item>@string/google_maps_sdk</item>
     </string-array>
     <string-array name="map_sdk_selector_entry_values" translatable="false">
-        <item>google_maps</item>
+        <item>mapbox_maps</item>
         <item>osmdroid</item>
+        <item>google_maps</item>
     </string-array>
 
+    <!-- Form management preferences-->
+    <string-array name="periodic_form_updates_check_entry_values">
+        <item>@string/never</item>
+        <item>@string/every_fifteen_minutes</item>
+        <item>@string/every_one_hour</item>
+        <item>@string/every_six_hours</item>
+        <item>@string/every_24_hours</item>
+    </string-array>
     <!-- Basemaps-->
     <string-array name="map_google_basemap_selector_entry_values" translatable="false">
         <item>streets</item>
@@ -126,6 +136,33 @@ the specific language governing permissions and limitations under the License. -
         <item>@string/openmap_stamen_terrain</item>
         <item>@string/openmap_cartodb_positron</item>
         <item>@string/openmap_cartodb_darkmatter</item>
+    </string-array>
+    <string-array name="map_mapbox_basemap_selector_entry_values" translatable="false">
+        <item>mapbox_streets</item>
+        <item>mapbox_light</item>
+        <item>mapbox_dark</item>
+        <item>mapbox_satellite</item>
+        <item>mapbox_satellite_streets</item>
+        <item>mapbox_outdoors</item>
+    </string-array>
+    <string-array name="map_mapbox_basemap_selector_entries">
+        <item>@string/mapbox_streets</item>
+        <item>@string/mapbox_light</item>
+        <item>@string/mapbox_dark</item>
+        <item>@string/mapbox_satellite</item>
+        <item>@string/mapbox_satellite_streets</item>
+        <item>@string/mapbox_outdoors</item>
+    </string-array>
+    <string-array name="delay_scale" translatable="false">
+        <item>1</item>
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+    </string-array>
+    <string-array name="time_scale" translatable="false">
+        <item>Seconds</item>
+        <item>Minutes</item>
     </string-array>
     <string-array name="autosend_selector_entries">
         <item>@string/off</item>
@@ -193,19 +230,5 @@ the specific language governing permissions and limitations under the License. -
         <item>@string/islamic_month_10</item>
         <item>@string/islamic_month_11</item>
         <item>@string/islamic_month_12</item>
-    </string-array>
-    <string-array name="periodic_form_updates_check_entry_values">
-        <item>@string/never_value</item>
-        <item>@string/every_fifteen_minutes_value</item>
-        <item>@string/every_one_hour_value</item>
-        <item>@string/every_six_hours_value</item>
-        <item>@string/every_24_hours_value</item>
-    </string-array>
-    <string-array name="periodic_form_updates_check_entries">
-        <item>@string/never</item>
-        <item>@string/every_fifteen_minutes</item>
-        <item>@string/every_one_hour</item>
-        <item>@string/every_six_hours</item>
-        <item>@string/every_24_hours</item>
     </string-array>
 </resources>

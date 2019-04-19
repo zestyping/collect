@@ -32,6 +32,7 @@ out/
 .externalNativeBuild/
 .navigation/
 captures/
+collect_app/src/main/res/values/dev-config.xml
 
 # Submodules
 javarosa/

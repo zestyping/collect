@@ -99,6 +99,7 @@ android {
             minifyEnabled(true)
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
             resValue("bool", "FIREBASE_CRASHLYTICS_ENABLED", "false")
+            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", MAPBOX_ACCESS_TOKEN
         }
         // Release build for the official ODK Collect app
         odkCollectRelease {
@@ -108,11 +109,13 @@ android {
             minifyEnabled(true)
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
             resValue("bool", "FIREBASE_CRASHLYTICS_ENABLED", "true")
+            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", MAPBOX_ACCESS_TOKEN
         }
         debug {
             debuggable(true)
             testCoverageEnabled(true)
             resValue("bool", "FIREBASE_CRASHLYTICS_ENABLED", "false")
+            buildConfigField 'String', "MAPBOX_ACCESS_TOKEN", MAPBOX_ACCESS_TOKEN
         }
     }
 
@@ -180,6 +183,10 @@ allprojects {
     }
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: '*.jar')
     implementation "com.android.support:support-v13:${rootProject.supportLibraryVersion}"
@@ -191,13 +198,19 @@ dependencies {
     implementation "com.android.support:exifinterface:${rootProject.supportLibraryVersion}"
     implementation "com.android.support:multidex:1.0.3"
 
-    implementation "com.google.android.gms:play-services-analytics:16.0.1"
-    implementation "com.google.android.gms:play-services-auth:16.0.0"
-    implementation "com.google.android.gms:play-services-maps:15.0.1"
-    implementation "com.google.android.gms:play-services-location:15.0.1"
+    implementation "com.google.android.gms:play-services-analytics:16.0.5"
+    implementation "com.google.android.gms:play-services-auth:16.0.1"
+    implementation "com.google.android.gms:play-services-maps:16.1.0"
+    implementation "com.google.android.gms:play-services-location:16.0.0"
 
-    implementation "com.google.firebase:firebase-core:16.0.1"
-    implementation "com.crashlytics.sdk.android:crashlytics:2.9.2"
+
+    implementation "com.google.firebase:firebase-core:16.0.5"
+
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:7.3.0'
+
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-plugin-annotation-v7:0.6.0'
+
+    implementation "com.crashlytics.sdk.android:crashlytics:2.9.5"
 
     implementation("com.google.guava:guava:26.0-android")
 

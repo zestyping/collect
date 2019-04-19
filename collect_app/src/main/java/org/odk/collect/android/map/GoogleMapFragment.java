@@ -57,9 +57,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import timber.log.Timber;
 
 public class GoogleMapFragment extends SupportMapFragment implements
-    MapFragment, LocationListener, LocationClient.LocationClientListener,
-    GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener,
-    GoogleMap.OnMarkerDragListener {
+        MapFragment, LocationListener, LocationClient.LocationClientListener,
+        GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener,
+        GoogleMap.OnMarkerDragListener {
     public static final LatLng INITIAL_CENTER = new LatLng(0, -30);
     public static final float INITIAL_ZOOM = 2;
     public static final float POINT_ZOOM = 16;
@@ -93,10 +93,10 @@ public class GoogleMapFragment extends SupportMapFragment implements
     @Override public void addTo(@NonNull FragmentActivity activity, int containerId, @Nullable ReadyListener listener) {
         // If the containing activity is being re-created upon screen rotation,
         // the FragmentManager will have also re-created a copy of the previous
-        // OsmMapFragment.  We don't want these useless copies of old fragments
+        // OsmMapFragment.    We don't want these useless copies of old fragments
         // to linger, so the following line calls .replace() instead of .add().
         activity.getSupportFragmentManager()
-            .beginTransaction().replace(containerId, this).commitNow();
+                .beginTransaction().replace(containerId, this).commitNow();
         getMapAsync((GoogleMap map) -> {
             if (map == null) {
                 ToastUtils.showShortToast(R.string.google_play_services_error_occured);
@@ -126,7 +126,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
         }
     }
 
-    // TOOD(ping): This method is only used by MapHelper.  Remove this after
+    // TOOD(ping): This method is only used by MapHelper.    Remove this after
     // MapFragment adds support for selectable basemaps.
     public GoogleMap getGoogleMap() {
         return map;
@@ -166,7 +166,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
         }
         if (center != null) {
             moveOrAnimateCamera(
-                CameraUpdateFactory.newLatLngZoom(toLatLng(center), (float) zoom), animate);
+                    CameraUpdateFactory.newLatLngZoom(toLatLng(center), (float) zoom), animate);
         }
     }
 
@@ -336,20 +336,20 @@ public class GoogleMapFragment extends SupportMapFragment implements
         }
         if (locationCrosshairs == null) {
             locationCrosshairs = map.addMarker(new MarkerOptions()
-                .position(loc)
-                .icon(getBitmapDescriptor(R.drawable.ic_crosshairs))
-                .anchor(0.5f, 0.5f)  // center the crosshairs on the position
+                    .position(loc)
+                    .icon(getBitmapDescriptor(R.drawable.ic_crosshairs))
+                    .anchor(0.5f, 0.5f)  // center the crosshairs on the position
             );
         }
         if (accuracyCircle == null) {
             int stroke = getResources().getColor(R.color.locationAccuracyCircle);
             int fill = getResources().getColor(R.color.locationAccuracyFill);
             accuracyCircle = map.addCircle(new CircleOptions()
-                .center(loc)
-                .radius(radius)
-                .strokeWidth(1)
-                .strokeColor(stroke)
-                .fillColor(fill)
+                    .center(loc)
+                    .radius(radius)
+                    .strokeWidth(1)
+                    .strokeColor(stroke)
+                    .fillColor(fill)
             );
         }
 
@@ -379,14 +379,14 @@ public class GoogleMapFragment extends SupportMapFragment implements
     }
 
     @Override public void onMarkerDragStart(Marker marker) {
-        // When dragging starts, GoogleMap makes the marker jump up to move it
-        // out from under the user's finger; whenever a marker moves, we have
+        // When dragging starts, GoogleMap makes the symbol jump up to move it
+        // out from under the user's finger; whenever a symbol moves, we have
         // to update its corresponding feature.
         updateFeature(findFeature(marker));
     }
 
     @Override public void onMarkerDrag(Marker marker) {
-        // When a marker is manually dragged, the position is no longer
+        // When a symbol is manually dragged, the position is no longer
         // obtained from a GPS reading, so the altitude and standard deviation
         // fields are no longer meaningful; reset them to zero.
         marker.setSnippet("0;0");
@@ -419,18 +419,18 @@ public class GoogleMapFragment extends SupportMapFragment implements
 
     protected void showGpsDisabledAlert() {
         gpsErrorDialog = new AlertDialog.Builder(getActivity())
-            .setMessage(getString(R.string.gps_enable_message))
-            .setCancelable(false)
-            .setPositiveButton(getString(R.string.enable_gps),
-                (dialog, id) -> startActivityForResult(
-                    new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0))
-            .setNegativeButton(getString(R.string.cancel),
-                (dialog, id) -> dialog.cancel())
-            .create();
+                .setMessage(getString(R.string.gps_enable_message))
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.enable_gps),
+                        (dialog, id) -> startActivityForResult(
+                                new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0))
+                .setNegativeButton(getString(R.string.cancel),
+                        (dialog, id) -> dialog.cancel())
+                .create();
         gpsErrorDialog.show();
     }
 
-    /** Finds the feature to which the given marker belongs. */
+    /** Finds the feature to which the given symbol belongs. */
     protected int findFeature(Marker marker) {
         for (int featureId : features.keySet()) {
             if (features.get(featureId).ownsMarker(marker)) {
@@ -456,7 +456,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
             return null;
         }
         return new MapPoint(location.getLatitude(), location.getLongitude(),
-            location.getAltitude(), location.getAccuracy());
+                location.getAltitude(), location.getAccuracy());
     }
 
     protected static @NonNull MapPoint fromMarker(@NonNull Marker marker) {
@@ -487,20 +487,20 @@ public class GoogleMapFragment extends SupportMapFragment implements
             return null;
         }
         // A Marker's position is a LatLng with just latitude and longitude
-        // fields.  We need to store the point's altitude and standard
-        // deviation values somewhere, so they go in the marker's snippet.
+        // fields.    We need to store the point's altitude and standard
+        // deviation values somewhere, so they go in the symbol's snippet.
         return map.addMarker(new MarkerOptions()
-            .position(toLatLng(point))
-            .snippet(point.alt + ";" + point.sd)
-            .draggable(draggable)
-            .icon(getBitmapDescriptor(R.drawable.ic_map_point))
-            .anchor(0.5f, 0.5f)  // center the icon on the position
+                .position(toLatLng(point))
+                .snippet(point.alt + ";" + point.sd)
+                .draggable(draggable)
+                .icon(getBitmapDescriptor(R.drawable.ic_map_point))
+                .anchor(0.5f, 0.5f)  // center the icon on the position
         );
     }
 
     protected BitmapDescriptor getBitmapDescriptor(int drawableId) {
         return BitmapDescriptorFactory.fromBitmap(
-            IconUtils.getBitmap(getActivity(), drawableId));
+                IconUtils.getBitmap(getActivity(), drawableId));
     }
 
     @VisibleForTesting public boolean isGpsErrorDialogShowing() {
@@ -509,12 +509,12 @@ public class GoogleMapFragment extends SupportMapFragment implements
 
     /**
      * A MapFeature is a physical feature on a map, such as a point, a road,
-     * a building, a region, etc.  It is presented to the user as one editable
+     * a building, a region, etc.    It is presented to the user as one editable
      * object, though its appearance may be constructed from multiple overlays
      * (e.g. geometric elements, handles for manipulation, etc.).
      */
     interface MapFeature {
-        /** Returns true if the given marker belongs to this feature. */
+        /** Returns true if the given symbol belongs to this feature. */
         boolean ownsMarker(Marker marker);
 
         /** Updates the feature's geometry after any UI handles have moved. */
@@ -547,7 +547,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
         }
     }
 
-    /** A polyline or polygon that can be manipulated by dragging markers at its vertices. */
+    /** A polyline or polygon that can be manipulated by dragging symbolOptionsList at its vertices. */
     protected class PolyFeature implements MapFeature {
         final GoogleMap map;
         final List<Marker> markers = new ArrayList<>();
@@ -583,10 +583,10 @@ public class GoogleMapFragment extends SupportMapFragment implements
                 clearPolyline();
             } else if (polyline == null) {
                 polyline = map.addPolyline(new PolylineOptions()
-                    .color(getResources().getColor(R.color.mapLine))
-                    .zIndex(1)
-                    .width(STROKE_WIDTH)
-                    .addAll(latLngs)
+                        .color(getResources().getColor(R.color.mapLine))
+                        .zIndex(1)
+                        .width(STROKE_WIDTH)
+                        .addAll(latLngs)
                 );
             } else {
                 polyline.setPoints(latLngs);
