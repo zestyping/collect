@@ -29,7 +29,6 @@ import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.plugins.annotation.Line;
 import com.mapbox.mapboxsdk.plugins.annotation.LineManager;
 import com.mapbox.mapboxsdk.plugins.annotation.LineOptions;
-import com.mapbox.mapboxsdk.plugins.annotation.OnLineDragListener;
 import com.mapbox.mapboxsdk.plugins.annotation.OnSymbolDragListener;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
@@ -52,7 +51,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import timber.log.Timber;
 
 import static android.os.Looper.getMainLooper;
 
@@ -85,6 +83,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     protected Map<Integer, MapFeature> features = new HashMap<>();
     protected SymbolManager symbolManager;
     protected LineManager lineManager;
+    protected boolean isDragging;
 
     // During Robolectric tests, Google Play Services is unavailable; sadly, the
     // "map" field will be null and many operations will need to be stubbed out.
@@ -157,48 +156,17 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
 
     private SymbolManager createSymbolManager() {
         SymbolManager symbolManager = new SymbolManager(mapView, map, map.getStyle());
-        // MAPBOX ISSUE: Even after setIconAllowOverlap(true), the symbol is not drawn
-        // when it is close to other symbols managed by this manager.
-        // MAPBOX ISSUE: Even after setIconIgnorePlacement(true), symbols from the
-        // basemap disappear when they are close to symbols added with this manager.
+        // MAPBOX ISSUE: setIconAllowOverlap(true) and setIconIgnorePlacement(true)
+        // should disable the usual hiding of symbols and base map labels that collide,
+        // but they don't if the symbol has a text field set by setTextField(...).
         symbolManager.setIconAllowOverlap(true);
         symbolManager.setIconIgnorePlacement(true);
         symbolManager.setIconPadding(0f);
-        symbolManager.addDragListener(new OnSymbolDragListener() {
-            @Override public void onAnnotationDragStarted(Symbol symbol) {
-                updateFeature(findFeature(symbol));
-            }
-
-            @Override public void onAnnotationDrag(Symbol symbol) {
-                // When a symbol is manually dragged, the position is no longer
-                // obtained from a GPS reading, so the altitude and standard
-                // deviation fields are no longer meaningful; reset them to zero.
-                symbol.setTextField("0;0");
-                updateFeature(findFeature(symbol));
-            }
-
-            @Override public void onAnnotationDragFinished(Symbol symbol) {
-                int featureId = findFeature(symbol);
-                updateFeature(featureId);
-                if (dragEndListener != null && featureId != -1) {
-                    dragEndListener.onFeature(featureId);
-                }
-                symbol.setDraggable(false);
-            }
-        });
         return symbolManager;
     }
 
     private LineManager createLineManager() {
-        LineManager lineManager = new LineManager(mapView, map, map.getStyle());
-        lineManager.addDragListener(new OnLineDragListener() {
-            @Override public void onAnnotationDragStarted(Line annotation) { }
-
-            @Override public void onAnnotationDrag(Line annotation) { }
-
-            @Override public void onAnnotationDragFinished(Line annotation) { }
-        });
-        return lineManager;
+        return new LineManager(mapView, map, map.getStyle());
     }
 
     @SuppressWarnings({"MissingPermission"})
@@ -321,46 +289,19 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     }
 
     protected Symbol createSymbol(SymbolManager symbolManager, MapPoint point, boolean draggable) {
-        // MAPBOX ISSUE: When dragging is enabled, every drag action also adds
-        // a point.  The Mapbox SDK seems to provide no way to prevent the drag
-        // touch from also passing through to the map and being interpreted as a
-        // map click.  This makes dragging unusable, so let's disable it for now.
-        draggable = false;
-
-        // A Symbol's position is a LatLng with just latitude and longitude
-        // fields.  The point's altitude and standard deviation values need to
-        // be stored somewhere, so we put them in an invisible text field.
         return symbolManager.create(new SymbolOptions()
             .withLatLng(toLatLng(point))
             .withIconImage(POINT_ICON_ID)
             .withIconSize(1f)
             .withZIndex(10)
             .withDraggable(draggable)
-            .withTextField(point.alt + ";" + point.sd)
             .withTextOpacity(0f)
         );
     }
 
-    /** Finds the feature to which the given symbol belongs. */
-    protected int findFeature(Symbol symbol) {
-        for (int featureId : features.keySet()) {
-            if (features.get(featureId).ownsSymbol(symbol)) {
-                return featureId;
-            }
-        }
-        return -1;  // not found
-    }
-
-    protected void updateFeature(int featureId) {
-        MapFeature feature = features.get(featureId);
-        if (feature != null) {
-            feature.update();
-        }
-    }
-
     @Override public int addMarker(MapPoint point, boolean draggable) {
         int featureId = nextFeatureId++;
-        features.put(featureId, new MarkerFeature(symbolManager, point, draggable));
+        features.put(featureId, new MarkerFeature(featureId, symbolManager, point, draggable));
         return featureId;
     }
 
@@ -387,7 +328,11 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     }
 
     @Override public boolean onMapClick(@NonNull LatLng point) {
-        if (clickListener != null) {
+        // MAPBOX ISSUE: Dragging can also generate MapClick and MapLongClick events,
+        // and the Mapbox SDK seems to provide no way to prevent the touch from
+        // being passed through to the map and being interpreted as a map click.
+        // Our workaround is to track drags in progress with the isDragging flag.
+        if (clickListener != null && !isDragging) {
             clickListener.onPoint(fromLatLng(point));
         }
         return true;
@@ -419,14 +364,14 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
 
     @Override public int addDraggablePoly(@NonNull Iterable<MapPoint> points, boolean closedPolygon) {
         int featureId = nextFeatureId++;
-        features.put(featureId, new PolyFeature(lineManager, symbolManager, points, closedPolygon));
+        features.put(featureId, new PolyFeature(featureId, lineManager, symbolManager, points, closedPolygon));
         return featureId;
     }
 
     @Override public void appendPointToPoly(int featureId, @NonNull MapPoint point) {
         MapFeature feature = features.get(featureId);
         if (feature instanceof PolyFeature) {
-            ((PolyFeature) feature).addPoint(point);
+            ((PolyFeature) feature).appendPoint(point);
         }
     }
 
@@ -486,7 +431,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     }
 
     @Override public boolean onMapLongClick(@NonNull LatLng latLng) {
-        if (longPressListener != null) {
+        if (longPressListener != null && !isDragging) {
             longPressListener.onPoint(fromLatLng(latLng));
         }
         return true;
@@ -520,22 +465,8 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
             location.getAltitude(), location.getAccuracy());
     }
 
-    protected static @NonNull MapPoint fromSymbol(@NonNull Symbol symbol) {
+    protected static @NonNull MapPoint fromSymbol(@NonNull Symbol symbol, double alt, double sd) {
         LatLng position = symbol.getLatLng();
-        String text = symbol.getTextField();
-        String[] parts = (text != null ? text : "").split(";");
-        double alt = 0;
-        double sd = 0;
-        try {
-            if (parts.length >= 1) {
-                alt = Double.parseDouble(parts[0]);
-            }
-            if (parts.length >= 2) {
-                sd = Double.parseDouble(parts[1]);
-            }
-        } catch (NumberFormatException e) {
-            Timber.w("Symbol.getTextField() did not contain two numbers");
-        }
         return new MapPoint(position.getLatitude(), position.getLongitude(), alt, sd);
     }
 
@@ -566,131 +497,169 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
      * (e.g. geometric elements, handles for manipulation, etc.).
      */
     interface MapFeature {
-        /** Returns true if the given Symbol belongs to this feature. */
-        boolean ownsSymbol(Symbol symbol);
-
-        /** Updates the feature's geometry after any UI handles have moved. */
-        void update();
-
         /** Removes the feature from the map, leaving it no longer usable. */
         void dispose();
     }
 
     /** A Symbol that can optionally be dragged by the user. */
     protected class MarkerFeature implements MapFeature {
-        private SymbolManager symbolManager;
+        private final int featureId;
+        private final SymbolManager symbolManager;
+        private final DragListener dragListener = new DragListener();
+        private MapPoint point;
         private Symbol symbol;
 
-        public MarkerFeature(SymbolManager symbolManager, MapPoint point, boolean draggable) {
+        public MarkerFeature(int featureId, SymbolManager symbolManager, MapPoint point, boolean draggable) {
+            this.featureId = featureId;
             this.symbolManager = symbolManager;
-            symbol = createSymbol(symbolManager, point, draggable);
+            this.point = point;
+            this.symbol = createSymbol(symbolManager, point, draggable);
+            symbolManager.addDragListener(dragListener);
         }
 
         public MapPoint getPoint() {
-            return fromSymbol(symbol);
+            return point;
         }
-
-        @Override public boolean ownsSymbol(Symbol symbol) {
-            return symbol.getId() == this.symbol.getId();
-        }
-
-        public void update() { }
 
         public void dispose() {
+            symbolManager.removeDragListener(dragListener);
             symbolManager.delete(symbol);
             symbol = null;
+        }
+
+        class DragListener implements OnSymbolDragListener {
+            @Override public void onAnnotationDragStarted(Symbol draggedSymbol) {
+                isDragging = true;
+            }
+
+            @Override public void onAnnotationDrag(Symbol draggedSymbol) {
+                isDragging = true;
+                if (draggedSymbol.getId() == symbol.getId()) {
+                    // When a symbol is manually dragged, the position is no longer
+                    // obtained from a GPS reading, so the altitude and standard
+                    // deviation fields are no longer meaningful; reset them to zero.
+                    point = fromSymbol(symbol, 0, 0);
+                }
+            }
+
+            @Override public void onAnnotationDragFinished(Symbol draggedSymbol) {
+                isDragging = false;
+                onAnnotationDrag(draggedSymbol);
+                if (draggedSymbol.getId() == symbol.getId() && dragEndListener != null) {
+                    dragEndListener.onFeature(featureId);
+                }
+            }
         }
     }
 
     /** A polyline or polygon that can be manipulated by dragging Symbols at its vertices. */
     protected class PolyFeature implements MapFeature {
-        final LineManager lineManager;
-        final SymbolManager symbolManager;
-        final List<Symbol> symbols = new ArrayList<>();
-        final boolean closedPolygon;
-        Line line;
         public static final float STROKE_WIDTH = 5;
 
-        public PolyFeature(LineManager lineManager, SymbolManager symbolManager,
+        private final int featureId;
+        private final LineManager lineManager;
+        private final SymbolManager symbolManager;
+        private final DragListener dragListener = new DragListener();
+        private final List<MapPoint> points = new ArrayList<>();
+        private final List<Symbol> symbols = new ArrayList<>();
+        private final boolean closedPolygon;
+        private Line line;
+
+        public PolyFeature(int featureId, LineManager lineManager, SymbolManager symbolManager,
             Iterable<MapPoint> points, boolean closedPolygon) {
+            this.featureId = featureId;
             this.lineManager = lineManager;
             this.symbolManager = symbolManager;
             this.closedPolygon = closedPolygon;
             for (MapPoint point : points) {
-                symbols.add(createSymbol(symbolManager, point, true));
+                this.points.add(point);
+                this.symbols.add(createSymbol(symbolManager, point, true));
             }
-            update();
+            line = lineManager.create(new LineOptions()
+                .withLineColor(ColorUtils.colorToRgbaString(getResources().getColor(R.color.mapLine)))
+                .withLineWidth(STROKE_WIDTH)
+                .withLatLngs(new ArrayList<>())
+            );
+            symbolManager.addDragListener(dragListener);
         }
 
-        @Override public boolean ownsSymbol(Symbol givenSymbol) {
-            long givenId = givenSymbol.getId();
-            for (Symbol symbol : symbols) {
-                if (symbol.getId() == givenId) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public void update() {
-            List<LatLng> latLngs = new ArrayList<>();
-            for (Symbol symbol : symbols) {
-                latLngs.add(toLatLng(fromSymbol(symbol)));
-            }
-            if (closedPolygon && !latLngs.isEmpty()) {
-                latLngs.add(latLngs.get(0));
-            }
-            if (latLngs.isEmpty()) {
-                clearLine();
-            } else if (line == null) {
-                line = lineManager.create(new LineOptions()
-                    .withLineColor(ColorUtils.colorToRgbaString(getResources().getColor(R.color.mapLine)))
-                    .withLatLngs(latLngs)
-                    .withLineWidth(STROKE_WIDTH)
-                );
-            } else {
-                line.setLatLngs(latLngs);
-                lineManager.update(line);
-            }
+        public List<MapPoint> getPoints() {
+            return new ArrayList<>(points);
         }
 
         public void dispose() {
-            clearLine();
+            if (line != null) {
+                lineManager.delete(line);
+                line = null;
+            }
+            symbolManager.removeDragListener(dragListener);
             for (Symbol symbol : symbols) {
                 symbolManager.delete(symbol);
             }
             symbols.clear();
         }
 
-        public List<MapPoint> getPoints() {
-            List<MapPoint> points = new ArrayList<>();
-            for (Symbol symbol : symbols) {
-                points.add(fromSymbol(symbol));
-            }
-            return points;
-        }
-
-        public void addPoint(MapPoint point) {
+        public void appendPoint(MapPoint point) {
             if (map == null) {  // during Robolectric tests, map will be null
                 return;
             }
+            points.add(point);
             symbols.add(createSymbol(symbolManager, point, true));
-            update();
+            updateLine();
         }
 
         public void removeLastPoint() {
-            if (!symbols.isEmpty()) {
-                int last = symbols.size() - 1;
+            int last = points.size() - 1;
+            if (last >= 0) {
                 symbolManager.delete(symbols.get(last));
                 symbols.remove(last);
-                update();
+                points.remove(last);
+                updateLine();
             }
         }
 
-        protected void clearLine() {
-            if (line != null) {
-                lineManager.delete(line);
-                line = null;
+        protected void updateLine() {
+            List<LatLng> latLngs = new ArrayList<>();
+            for (MapPoint point : points) {
+                latLngs.add(toLatLng(point));
+            }
+            if (closedPolygon && !latLngs.isEmpty()) {
+                latLngs.add(latLngs.get(0));
+            }
+            line.setLatLngs(latLngs);
+            lineManager.update(line);
+        }
+
+        class DragListener implements OnSymbolDragListener {
+            @Override public void onAnnotationDragStarted(Symbol draggedSymbol) {
+                isDragging = true;
+            }
+
+            @Override public void onAnnotationDrag(Symbol draggedSymbol) {
+                isDragging = true;
+                for (int i = 0; i < symbols.size(); i++) {
+                    Symbol symbol = symbols.get(i);
+                    if (draggedSymbol.getId() == symbol.getId()) {
+                        // When a symbol is manually dragged, the position is no longer
+                        // obtained from a GPS reading, so the altitude and standard
+                        // deviation fields are no longer meaningful; reset them to zero.
+                        points.set(i, fromSymbol(symbol, 0, 0));
+                    }
+                }
+                updateLine();
+            }
+
+            @Override public void onAnnotationDragFinished(Symbol draggedSymbol) {
+                onAnnotationDrag(draggedSymbol);
+                isDragging = false;
+                if (dragEndListener != null) {
+                    for (Symbol symbol : symbols) {
+                        if (draggedSymbol.getId() == symbol.getId()) {
+                            dragEndListener.onFeature(featureId);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
