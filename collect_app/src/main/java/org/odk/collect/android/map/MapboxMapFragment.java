@@ -328,12 +328,23 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     }
 
     @Override public boolean onMapClick(@NonNull LatLng point) {
-        // MAPBOX ISSUE: Dragging can also generate MapClick and MapLongClick events,
-        // and the Mapbox SDK seems to provide no way to prevent the touch from
-        // being passed through to the map and being interpreted as a map click.
+        // MAPBOX ISSUE: Dragging can also generate map click events, and the
+        // Mapbox SDK seems to provide no way to prevent drag touches from being
+        // passed through to the map and being interpreted as a map click.
         // Our workaround is to track drags in progress with the isDragging flag.
         if (clickListener != null && !isDragging) {
             clickListener.onPoint(fromLatLng(point));
+        }
+        return true;
+    }
+
+    @Override public boolean onMapLongClick(@NonNull LatLng latLng) {
+        // MAPBOX ISSUE: Dragging can also generate map long-click events, and the
+        // Mapbox SDK seems to provide no way to prevent drag touches from being
+        // passed through to the map and being interpreted as a map click.
+        // Our workaround is to track drags in progress with the isDragging flag.
+        if (longPressListener != null && !isDragging) {
+            longPressListener.onPoint(fromLatLng(latLng));
         }
         return true;
     }
@@ -428,13 +439,6 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
 
     @Override public @Nullable MapPoint getGpsLocation() {
         return lastLocationFix;
-    }
-
-    @Override public boolean onMapLongClick(@NonNull LatLng latLng) {
-        if (longPressListener != null && !isDragging) {
-            longPressListener.onPoint(fromLatLng(latLng));
-        }
-        return true;
     }
 
     @Override public void onSuccess(LocationEngineResult result) {
