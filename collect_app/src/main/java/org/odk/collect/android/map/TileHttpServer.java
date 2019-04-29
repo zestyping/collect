@@ -1,9 +1,11 @@
 package org.odk.collect.android.map;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -13,71 +15,90 @@ import timber.log.Timber;
 
 /** A minimal HTTP server that serves tiles from a set of TileSources. */
 public class TileHttpServer {
-    final Map<String, TileSource> sources = new HashMap<>();
-    final int port;
-    ServerThread server;
+    public static final int PORT_MIN = 8000;
+    public static final int PORT_MAX = 8999;
 
-    public TileHttpServer(int port) throws IOException {
-        this.port = port;
-        server = new ServerThread(port);
+    final Map<String, TileSource> sources = new HashMap<>();
+    final ServerThread server;
+    final ServerSocket socket;
+
+    public TileHttpServer() throws IOException {
+        socket = createBoundSocket(PORT_MIN, PORT_MAX);
+        if (socket == null) {
+            throw new IOException("Could not find an available port");
+        }
+        server = new ServerThread(socket);
+        server.start();
     }
 
+    /** Finds an available port and binds a ServerSocket to it. */
+    protected static ServerSocket createBoundSocket(int portMin, int portMax) throws IOException {
+        for (int port = portMin; port <= portMax; port++) {
+            try {
+                return new ServerSocket(port);
+            } catch (BindException e) {
+                continue;  // this port is in use; try another one
+            }
+        }
+        Timber.e("No ports available from %d to %d", portMin, portMax);
+        return null;
+    }
+
+    public String getUrlTemplate(String key) {
+        return String.format("http://localhost:%d/%s/{z}/{x}/{y}.pbf", socket.getLocalPort(), key);
+    }
+
+    /**
+     * Adds a TileSource with a given key.  Tiles from this source will be served
+     * under the URL path /{key}/{zoom}/{x}/{y}.  If this TileSource implements
+     * Closeable, it will be closed when this server is finalized with destroy().
+     */
     public void addSource(String key, TileSource source) {
         sources.put(key, source);
     }
 
-    public void start() {
-        if (!server.isAlive()) {
-            server.start();
-        }
-    }
-
-    public void stop() {
-        if (server.isAlive()) {
-            server.close();
-            server.interrupt();
-        }
-    }
-
-    class ServerThread extends Thread {
-        int port;
-        ServerSocket socket;
-
-        public ServerThread(int port) throws IOException {
-            super();
-            this.port = port;
-        }
-
-        public void run() {
-            try {
-                socket = new ServerSocket(port);
-                socket.setReuseAddress(true);
-                Timber.i("Ready for requests on port %d", port);
-                while (!isInterrupted()) {
-                    Socket connection = socket.accept();
-                    Timber.i("Accepted a client connection");
-                    new ReplyThread(connection).start();
-                }
-            } catch (IOException e) {
-                Timber.i("Server thread stopped: %s", e.getMessage());
-            } finally {
-                close();
-            }
-        }
-
-        public void close() {
-            if (socket != null) {
+    /** Permanently closes all sockets and closeable TileSources. */
+    public void destroy() {
+        try {
+            socket.close();
+        } catch (IOException e) { /* ignore */ }
+        server.interrupt();
+        for (TileSource source : sources.values()) {
+            if (source instanceof Closeable) {
                 try {
-                    socket.close();  // makes socket.accept() throw SocketException
+                    ((Closeable) source).close();
                 } catch (IOException e) { /* ignore */ }
             }
         }
     }
 
-    class ReplyThread extends Thread {
+    class ServerThread extends Thread {
+        final ServerSocket socket;
+
+        public ServerThread(ServerSocket socket) {
+            this.socket = socket;
+        }
+
+        public void run() {
+            try {
+                socket.setReuseAddress(true);
+                Timber.i("Ready for requests on port %d", socket.getLocalPort());
+                while (!isInterrupted()) {
+                    Socket connection = socket.accept();
+                    Timber.i("Accepted a client connection");
+                    new ResponseThread(connection).start();
+                }
+                Timber.i("Server thread interrupted");
+            } catch (IOException e) {
+                Timber.i("Server thread stopped: %s", e.getMessage());
+            }
+        }
+    }
+
+    class ResponseThread extends Thread {
         final Socket connection;
 
-        public ReplyThread(Socket connection) {
+        public ResponseThread(Socket connection) {
             this.connection = connection;
         }
 
@@ -86,19 +107,26 @@ public class TileHttpServer {
                 InputStreamReader reader = new InputStreamReader(connection.getInputStream());
                 String request = new BufferedReader(reader).readLine();
                 Timber.i("Received request: %s", request);
+                if (request == null) {
+                    return;
+                }
                 long start = System.currentTimeMillis();
-                byte[] data = getReply(request);
-                sendReply(connection, data);
+                Response response = getResponse(request);
+                if (response == null) {
+                    Timber.i("%s: No tile at these coordinates", request);
+                    return;
+                }
+                sendResponse(connection, response);
                 long finish = System.currentTimeMillis();
-                Timber.i("%s: Served %d bytes in %d ms", request, data.length, finish - start);
+                Timber.i("%s: Served %d bytes in %d ms", request, response.data.length, finish - start);
             } catch (IOException e) {
                 Timber.e(e, "Unable to read request from socket");
             }
         }
 
-        protected byte[] getReply(String request) {
+        protected Response getResponse(String request) {
             if (request.startsWith("GET /")) {
-                String path = request.substring(5).split(" ", 2)[0];
+                String path = request.substring(5).split("[. ]", 2)[0];
                 String[] parts = path.split("/");
                 if (parts.length == 4) {
                     try {
@@ -114,29 +142,44 @@ public class TileHttpServer {
                 }
             }
             Timber.w("Ignoring request: %s", request);
-            return new byte[0];
+            return null;
         }
 
-        protected void sendReply(Socket connection, byte[] data) {
+        protected void sendResponse(Socket connection, Response response) {
             String headers = String.format(
                 "HTTP/1.0 200\r\n" +
-                    "Content-Type: application/octet-stream\r\n" +
+                    "Content-Type: %s\r\n" +
+                    "Content-Encoding: %s\r\n" +
                     "Content-Length: %d\r\n" +
                     "\r\n",
-                data.length
+                response.contentType,
+                response.contentEncoding,
+                response.data.length
             );
 
             try (OutputStream output = connection.getOutputStream()) {
                 output.write(headers.getBytes());
-                output.write(data);
+                output.write(response.data);
                 output.flush();
             } catch (IOException e) {
-                Timber.e(e, "Unable to write reply to socket");
+                Timber.e(e, "Unable to write response to socket");
             }
         }
     }
 
+    public static class Response {
+        byte[] data;
+        String contentType;
+        String contentEncoding;
+
+        public Response(byte[] data, String contentType, String contentEncoding) {
+            this.data = data;
+            this.contentType = contentType;
+            this.contentEncoding = contentEncoding;
+        }
+    }
+
     public interface TileSource {
-        byte[] getTile(int zoom, int x, int y);
+        Response getTile(int zoom, int x, int y);
     }
 }
