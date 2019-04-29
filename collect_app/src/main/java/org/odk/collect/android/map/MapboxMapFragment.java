@@ -1,5 +1,6 @@
 package org.odk.collect.android.map;
 
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -33,12 +35,18 @@ import com.mapbox.mapboxsdk.plugins.annotation.OnSymbolDragListener;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
+import com.mapbox.mapboxsdk.style.layers.FillLayer;
 import com.mapbox.mapboxsdk.style.layers.TransitionOptions;
+import com.mapbox.mapboxsdk.style.sources.TileSet;
+import com.mapbox.mapboxsdk.style.sources.VectorSource;
 import com.mapbox.mapboxsdk.utils.ColorUtils;
 
+import org.odk.collect.android.BuildConfig;
 import org.odk.collect.android.R;
+import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.GeneralKeys;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,8 +59,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import timber.log.Timber;
 
 import static android.os.Looper.getMainLooper;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillColor;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillOpacity;
 
 public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragment,
     OnMapReadyCallback, PermissionsListener,
@@ -65,6 +76,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     public static final String POINT_ICON_ID = "point-icon-id";
     public static final long LOCATION_INTERVAL_MILLIS = 1000;
     public static final long LOCATION_MAX_WAIT_MILLIS = 5 * LOCATION_INTERVAL_MILLIS;
+    public static final int TILE_SERVER_PORT = 8989;
 
     protected MapboxMap map;
     protected ReadyListener readyListener;
@@ -85,13 +97,17 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     protected LineManager lineManager;
     protected boolean isDragging;
 
+    protected TileHttpServer tileServer;
+
     // During Robolectric tests, Google Play Services is unavailable; sadly, the
     // "map" field will be null and many operations will need to be stubbed out.
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This flag is exposed for Robolectric tests to set")
     @VisibleForTesting public static boolean testMode;
 
-    @SuppressWarnings({"MissingPermission"})
     @Override public void addTo(@NonNull FragmentActivity activity, int containerId, @Nullable ReadyListener listener) {
+        // The Mapbox API access token is configured in collect_app/secrets.properties.
+        Mapbox.getInstance(Collect.getInstance(), BuildConfig.MAPBOX_ACCESS_TOKEN);
+
         readyListener = listener;
         activity.getSupportFragmentManager()
             .beginTransaction().replace(containerId, this).commitNow();
@@ -99,7 +115,34 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
             this.map = map;  // signature of getMapAsync() ensures map is never null
             assert mapView != null;  // should have been initialized by now
 
+            startTileServer();
+
             map.setStyle(getDesiredMapboxStyle(), style -> {
+                /*
+                RasterSource osmSource = new RasterSource("osm", new TileSet(
+                    "2.2.0",
+                    "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                ), 256);
+                style.addSource(osmSource);
+                RasterLayer osmLayer = new RasterLayer("osm-layer", "osm");
+                osmLayer.setProperties(PropertyFactory.rasterOpacity(0.5f));
+                style.addLayer(osmLayer);
+*/
+
+                VectorSource maptilerSource = new VectorSource("maptiler", new TileSet(
+                    "2.2.0",
+                    "https://maps.tilehosting.com/data/v3/{z}/{x}/{y}.pbf?key=BItdq5DAmqT6AadrAI6r"
+                ));
+                style.addSource(maptilerSource);
+
+                FillLayer maptilerFill = new FillLayer("maptiler-fill", "maptiler");
+                maptilerFill.setProperties(
+                    fillColor(Color.parseColor("#0080ff")),
+                    fillOpacity(0.4f)
+                );
+                style.addLayer(maptilerFill);
+
+
                 map.getUiSettings().setCompassGravity(Gravity.TOP | Gravity.START);
                 map.getUiSettings().setCompassMargins(36, 36, 36, 36);
                 map.getStyle().setTransition(new TransitionOptions(0, 0, false));
@@ -130,6 +173,30 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
                 readyListener.onReady(this);
             }
         });
+    }
+
+    protected void startTileServer() {
+        try {
+            tileServer = new TileHttpServer(TILE_SERVER_PORT);
+            tileServer.addSource("foo", new DummyTileSource());
+            tileServer.start();
+        } catch (IOException e) {
+            Timber.e(e, "Unable to start tile server");
+        }
+    }
+
+    @Override public void onStart() {
+        super.onStart();
+        if (tileServer != null) {
+            tileServer.start();
+        }
+    }
+
+    @Override public void onStop() {
+        if (tileServer != null) {
+            tileServer.stop();
+        }
+        super.onStop();
     }
 
     @Override public Fragment getFragment() {
