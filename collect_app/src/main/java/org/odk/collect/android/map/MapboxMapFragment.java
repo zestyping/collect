@@ -70,6 +70,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.rasterOpacity;
 
 public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragment,
     OnMapReadyCallback, PermissionsListener,
@@ -208,21 +209,30 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
         }
     }
 
+    int hue = 200;
+
     private void addMbtiles(Style style, String id, File file) {
         MbtilesSource source = new MbtilesSource(id, file, tileServer);
         style.addSource(source);
-        List<MbtilesSource.VectorLayer> layers = source.getVectorLayers();
-        for (MbtilesSource.VectorLayer layer : layers) {
-            int hue = (200 + 360 / layers.size()) % 360;
-            style.addLayer(new FillLayer(id + "/" + layer.name + ".fill", id).withProperties(
-                fillColor(Color.HSVToColor(new float[] {hue, 0.3f, 1})),
-                fillOpacity(0.1f)
-            ).withSourceLayer(layer.name));
-            style.addLayer(new LineLayer(id + "/" + layer.name + ".line", id).withProperties(
-                lineColor(Color.HSVToColor(new float[] {hue, 0.7f, 1})),
-                lineWidth(1f),
-                lineOpacity(0.7f)
-            ).withSourceLayer(layer.name));
+        if (source.getType() == MbtilesSource.Type.VECTOR) {
+            List<MbtilesSource.VectorLayer> layers = source.getVectorLayers();
+            for (MbtilesSource.VectorLayer layer : layers) {
+                style.addLayer(new FillLayer(id + "/" + layer.name + ".fill", id).withProperties(
+                    fillColor(Color.HSVToColor(new float[] {hue, 0.3f, 1})),
+                    fillOpacity(0.1f)
+                ).withSourceLayer(layer.name));
+                style.addLayer(new LineLayer(id + "/" + layer.name + ".line", id).withProperties(
+                    lineColor(Color.HSVToColor(new float[] {hue, 0.7f, 1})),
+                    lineWidth(1f),
+                    lineOpacity(0.7f)
+                ).withSourceLayer(layer.name));
+                hue -= 60;
+            }
+        }
+        if (source.getType() == MbtilesSource.Type.RASTER) {
+            style.addLayer(new RasterLayer(id + ".raster", id).withProperties(
+                rasterOpacity(0.5f)
+            ));
         }
     }
 
