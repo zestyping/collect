@@ -213,7 +213,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
 
     private void addMbtiles(Style style, String id, File file) {
         MbtilesSource source = new MbtilesSource(id, file, tileServer);
-        style.addSource(source);
+        style.addSource(source.getSource());
         if (source.getType() == MbtilesSource.Type.VECTOR) {
             List<MbtilesSource.VectorLayer> layers = source.getVectorLayers();
             for (MbtilesSource.VectorLayer layer : layers) {

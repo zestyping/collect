@@ -45,7 +45,7 @@ public class TileHttpServer {
     }
 
     public String getUrlTemplate(String key) {
-        return String.format("http://localhost:%d/%s/{z}/{x}/{y}.pbf", socket.getLocalPort(), key);
+        return String.format("http://localhost:%d/%s/{z}/{x}/{y}", socket.getLocalPort(), key);
     }
 
     /**

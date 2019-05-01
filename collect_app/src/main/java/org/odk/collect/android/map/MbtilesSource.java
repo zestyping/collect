@@ -4,6 +4,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
+import com.mapbox.mapboxsdk.style.sources.RasterSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
 import com.mapbox.mapboxsdk.style.sources.TileSet;
 import com.mapbox.mapboxsdk.style.sources.VectorSource;
 
@@ -19,11 +21,12 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import timber.log.Timber;
 
-public class MbtilesSource extends VectorSource implements Closeable, TileHttpServer.TileSource {
+public class MbtilesSource implements Closeable, TileHttpServer.TileSource {
     public enum Type { RASTER, VECTOR }
 
     final MbtilesFile mbtiles;
     final String format;
+    final Source source;
     Type type;
     String contentType = "application/octet-stream";
     String contentEncoding = "identity";
@@ -33,7 +36,6 @@ public class MbtilesSource extends VectorSource implements Closeable, TileHttpSe
     }
 
     public MbtilesSource(String name, MbtilesFile mbtiles, TileHttpServer server) {
-        super(name, createTileSet(mbtiles, server.getUrlTemplate(name)));
         server.addSource(name, this);
         this.mbtiles = mbtiles;
         this.format = mbtiles.getMetadata("format").toLowerCase();
@@ -50,6 +52,18 @@ public class MbtilesSource extends VectorSource implements Closeable, TileHttpSe
         } else {
             Timber.w("Unrecognized .mbtiles format \"%s\"", format);
         }
+        TileSet tileSet = createTileSet(mbtiles, server.getUrlTemplate(name));
+        if (type == Type.VECTOR) {
+            source = new VectorSource(name, tileSet);
+        } else if (type == Type.RASTER) {
+            source = new RasterSource(name, tileSet);
+        } else {
+            source = null;
+        }
+    }
+
+    public Source getSource() {
+        return source;
     }
 
     protected static TileSet createTileSet(MbtilesFile mbtiles, String urlTemplate) {
