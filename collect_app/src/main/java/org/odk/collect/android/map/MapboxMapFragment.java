@@ -1,5 +1,6 @@
 package org.odk.collect.android.map;
 
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -84,12 +85,18 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     public static final long LOCATION_INTERVAL_MILLIS = 1000;
     public static final long LOCATION_MAX_WAIT_MILLIS = 5 * LOCATION_INTERVAL_MILLIS;
 
-    // On some devices, Mapbox.getInstance() crashes when passed an empty access
-    // token (a hard, native-level assertion failure, not a catchable exception).
-    // The dummy access token is not a valid access token, just a string that's
-    // well-formed enough to avoid this crash.
-    protected static final String DUMMY_ACCESS_TOKEN = "pk.";
-    protected static final boolean ACCESS_TOKEN_MISSING = BuildConfig.MAPBOX_ACCESS_TOKEN.isEmpty();
+    // Map from preference values (defined by map_mapbox_basemap_selector_entry_values)
+    // to base map style URLs.
+    protected static final Map<String, String> STYLE_URLS = new HashMap<>();
+    static {
+        STYLE_URLS.put("mapbox_streets", Style.MAPBOX_STREETS);
+        STYLE_URLS.put("mapbox_light", Style.LIGHT);
+        STYLE_URLS.put("mapbox_dark", Style.DARK);
+        STYLE_URLS.put("mapbox_satellite", Style.SATELLITE);
+        STYLE_URLS.put("mapbox_satellite_streets", Style.SATELLITE_STREETS);
+        STYLE_URLS.put("mapbox_outdoors", Style.OUTDOORS);
+    }
+    protected static final String DEFAULT_STYLE_URL = Style.MAPBOX_STREETS;
 
     protected MapboxMap map;
     protected ReadyListener readyListener;
@@ -118,11 +125,10 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     @VisibleForTesting public static boolean testMode;
 
     @Override public void addTo(@NonNull FragmentActivity activity, int containerId, @Nullable ReadyListener listener) {
-        // To use the Mapbox SDK, we have to initialize it with an access token.
-        // Configure this token in collect_app/secrets.properties.  If it is not
-        // defined, we'll use DUMMY_ACCESS_TOKEN instead.
-        String token = ACCESS_TOKEN_MISSING ? DUMMY_ACCESS_TOKEN : BuildConfig.MAPBOX_ACCESS_TOKEN;
-        Mapbox.getInstance(Collect.getInstance(), token);
+        // To use the Mapbox base maps, we have to initialize the Mapbox SDK with
+        // an access token. Configure this token in collect_app/secrets.properties.
+        // If no token is defined, we use the OSM base map; see getDesiredStyleBuilder().
+        Mapbox.getInstance(Collect.getInstance(), BuildConfig.MAPBOX_ACCESS_TOKEN);
 
         // Mapbox SDK only knows how to fetch tiles via HTTP.  If we want it to
         // display tiles from a local file, we have to serve them locally over HTTP.
@@ -139,16 +145,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
             this.map = map;  // signature of getMapAsync() ensures map is never null
             assert mapView != null;  // should have been initialized by now
 
-            map.setStyle(getDesiredMapboxStyle(), style -> {
-                // If we can't use the Mapbox base map, fall back to the OSM base map.
-                if (ACCESS_TOKEN_MISSING) {
-                    style.addSource(new RasterSource("[osm]", new TileSet(
-                        "2.2.0",
-                        "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    ), 256));
-                    style.addLayer(new RasterLayer("[osm]", "[osm]"));
-                }
-
+            map.setStyle(getDesiredStyleBuilder(), style -> {
                 for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
                     String name = file.getName();
                     if (name.endsWith(".mbtiles")) {
@@ -198,22 +195,19 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
         return this;
     }
 
-    private String getDesiredMapboxStyle() {
-        switch (PreferenceManager.getDefaultSharedPreferences(getContext()).getString(
-            GeneralKeys.KEY_MAP_BASEMAP, null)) {
-            case "mapbox_light":
-                return Style.LIGHT;
-            case "mapbox_dark":
-                return Style.DARK;
-            case "mapbox_satellite":
-                return Style.SATELLITE;
-            case "mapbox_satellite_streets":
-                return Style.SATELLITE_STREETS;
-            case "mapbox_outdoors":
-                return Style.OUTDOORS;
-            default:
-                return Style.MAPBOX_STREETS;
+    private Style.Builder getDesiredStyleBuilder() {
+        if (BuildConfig.MAPBOX_ACCESS_TOKEN.isEmpty()) {
+            // Since we can't use the Mapbox base map, fall back to the OSM base map.
+            // NOTE: Trying to use a Mapbox style URL with an empty MAPBOX_ACCESS_TOKEN
+            // will cause the Mapbox SDK to abort with an uncatchable assertion failure!
+            TileSet tiles = new TileSet("2.2.0", "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
+            return new Style.Builder()
+                .withSource(new RasterSource("[osm]", tiles, 256))
+                .withLayer(new RasterLayer("[osm]", "[osm]"));
         }
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String url = STYLE_URLS.get(prefs.getString(GeneralKeys.KEY_MAP_BASEMAP, null));
+        return new Style.Builder().fromUrl(url == null ? DEFAULT_STYLE_URL : url);
     }
 
     int hue = 200;
