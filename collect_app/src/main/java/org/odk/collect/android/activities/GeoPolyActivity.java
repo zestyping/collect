@@ -52,9 +52,7 @@ import androidx.annotation.VisibleForTesting;
 import static org.odk.collect.android.utilities.PermissionUtils.areLocationPermissionsGranted;
 
 public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterReceiver {
-    public static final String PREF_VALUE_GOOGLE_MAPS = "google_maps";
-    public static final String PREF_VALUE_MAPBOX_MAPS = "mapbox_maps";
-    public static final String PREF_VALUE_OSM_MAPS = "osm";
+
     public static final String ANSWER_KEY = "answer";
     public static final String OUTPUT_MODE_KEY = "output_mode";
     public static final String MAP_CENTER_KEY = "map_center";
@@ -146,11 +144,11 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
 
     public MapFragment createMapFragment() {
         switch (getIntent().getStringExtra(GeneralKeys.KEY_MAP_SDK)) {
-            case PREF_VALUE_GOOGLE_MAPS:
+            case GeneralKeys.GOOGLE_MAPS_BASEMAP_KEY:
                 return new GoogleMapFragment();
-            case PREF_VALUE_OSM_MAPS:
+            case GeneralKeys.OSM_BASEMAP_KEY:
                 return new OsmMapFragment();
-            case PREF_VALUE_MAPBOX_MAPS:
+            case GeneralKeys.MAPBOX_BASEMAP_KEY:
             default:
                 return new MapboxMapFragment();
         }

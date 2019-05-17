@@ -77,16 +77,15 @@ public final class GeneralKeys {
     public static final String GOOGLE_MAPS_BASEMAP_KEY      = "google_maps";
     private static final String AUTOSEND_OFF                = "off";
     private static final String GUIDANCE_HINT_OFF           = "no";
-    static final String MAP_SDK_OSM                         = "osm";
-    static final String MAP_SDK_GOOGLE                      = "google";
-    static final String MAP_SDK_MAPBOX                      = "mapbox";
 
-    static final String GOOGLE_MAPS_BASEMAP_DEFAULT         = "streets";
-    static final String OSM_BASEMAP_KEY                     = "osmdroid";
-    static final String OSM_MAPS_BASEMAP_DEFAULT            = "openmap_streets";
-    static final String MAPBOX_BASEMAP_KEY                  = "mapbox";
-    static final String MAPBOX_MAPS_BASEMAP_DEFAULT         = "mapbox_streets";
+    public static final String GOOGLE_MAPS_BASEMAP_DEFAULT         = "streets";
+    public static final String OSM_BASEMAP_KEY                     = "osmdroid";
+    public static final String OSM_MAPS_BASEMAP_DEFAULT            = "openmap_streets";
+    public static final String MAPBOX_BASEMAP_KEY                  = "mapbox";
+    public static final String MAPBOX_MAPS_BASEMAP_DEFAULT         = "mapbox_streets";
     public static final String MAPBOX_MAP_STYLE_KEY         = "mapbox_map_style";
+
+    public static final String DEFAULT_BASEMAP_KEY = OSM_BASEMAP_KEY;
 
     private static HashMap<String, Object> getHashMap() {
         HashMap<String, Object> hashMap = new HashMap<>();

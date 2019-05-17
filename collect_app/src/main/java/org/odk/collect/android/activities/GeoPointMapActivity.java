@@ -17,7 +17,6 @@ package org.odk.collect.android.activities;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.VisibleForTesting;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageButton;
@@ -38,6 +37,7 @@ import org.osmdroid.tileprovider.IRegisterReceiver;
 
 import java.text.DecimalFormat;
 
+import androidx.annotation.VisibleForTesting;
 import timber.log.Timber;
 
 import static org.odk.collect.android.utilities.PermissionUtils.areLocationPermissionsGranted;
@@ -48,9 +48,7 @@ import static org.odk.collect.android.utilities.PermissionUtils.areLocationPermi
  * at the current location (obtained from GPS or other location sensors).
  */
 public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegisterReceiver {
-    public static final String PREF_VALUE_GOOGLE_MAPS = "google_maps";
-    public static final String PREF_VALUE_OSM_MAPS = "osm";
-    public static final String PREF_VALUE_MAPBOX_MAPS = "mapbox";
+
     public static final String MAP_CENTER_KEY = "map_center";
     public static final String MAP_ZOOM_KEY = "map_zoom";
     public static final String POINT_KEY = "point";
@@ -135,11 +133,11 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
 
     public MapFragment createMapFragment() {
         switch (getIntent().getStringExtra(GeneralKeys.KEY_MAP_SDK)) {
-            case PREF_VALUE_GOOGLE_MAPS:
+            case GeneralKeys.GOOGLE_MAPS_BASEMAP_KEY:
                 return new GoogleMapFragment();
-            case PREF_VALUE_OSM_MAPS:
+            case GeneralKeys.OSM_BASEMAP_KEY:
                 return new OsmMapFragment();
-            case PREF_VALUE_MAPBOX_MAPS:
+            case GeneralKeys.MAPBOX_BASEMAP_KEY:
             default:
                 return new MapboxMapFragment();
         }
