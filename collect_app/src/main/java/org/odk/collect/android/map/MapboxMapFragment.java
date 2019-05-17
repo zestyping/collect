@@ -212,11 +212,16 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     int hue = 200;
 
     private void addMbtiles(Style style, String id, File file) {
-        MbtilesSource source = new MbtilesSource(id, file, tileServer);
-        style.addSource(source.getSource());
-        if (source.getType() == MbtilesSource.Type.VECTOR) {
-            List<MbtilesSource.VectorLayer> layers = source.getVectorLayers();
-            for (MbtilesSource.VectorLayer layer : layers) {
+        MbtilesFile mbtiles;
+        try {
+            mbtiles = new MbtilesFile(file);
+        } catch (MbtilesFile.UnsupportedFormatException e) {
+            return;
+        }
+        style.addSource(mbtiles.getSource(id, tileServer.getUrlTemplate(id)));
+        if (mbtiles.getType() == MbtilesFile.Type.VECTOR) {
+            List<MbtilesFile.VectorLayer> layers = mbtiles.getVectorLayers();
+            for (MbtilesFile.VectorLayer layer : layers) {
                 style.addLayer(new FillLayer(id + "/" + layer.name + ".fill", id).withProperties(
                     fillColor(Color.HSVToColor(new float[] {hue, 0.3f, 1})),
                     fillOpacity(0.1f)
@@ -229,7 +234,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
                 hue -= 60;
             }
         }
-        if (source.getType() == MbtilesSource.Type.RASTER) {
+        if (mbtiles.getType() == MbtilesFile.Type.RASTER) {
             style.addLayer(new RasterLayer(id + ".raster", id).withProperties(
                 rasterOpacity(0.5f)
             ));

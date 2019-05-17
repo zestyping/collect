@@ -15,30 +15,24 @@ import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import timber.log.Timber;
 
-public class MbtilesSource implements Closeable, TileHttpServer.TileSource {
+public class MbtilesFile implements Closeable, TileHttpServer.TileSource {
     public enum Type { RASTER, VECTOR }
 
-    final MbtilesFile mbtiles;
+    final SQLiteDatabase db;
     final String format;
-    final Source source;
-    Type type;
+    final Type type;
     String contentType = "application/octet-stream";
     String contentEncoding = "identity";
 
-    public MbtilesSource(String name, File file, TileHttpServer server) throws SQLiteException {
-        this(name, new MbtilesFile(file), server);
-    }
-
-    public MbtilesSource(String name, MbtilesFile mbtiles, TileHttpServer server) {
-        server.addSource(name, this);
-        this.mbtiles = mbtiles;
-        this.format = mbtiles.getMetadata("format").toLowerCase();
+    public MbtilesFile(File file) throws SQLiteException, UnsupportedFormatException {
+        db = SQLiteDatabase.openOrCreateDatabase(file, null);
+        format = getMetadata("format").toLowerCase();
         if (format.equals("pbf") || format.equals("mvt")) {
             contentType = "application/protobuf";
             contentEncoding = "gzip";
@@ -50,20 +44,51 @@ public class MbtilesSource implements Closeable, TileHttpServer.TileSource {
             contentType = "image/png";
             type = Type.RASTER;
         } else {
-            Timber.w("Unrecognized .mbtiles format \"%s\"", format);
-        }
-        TileSet tileSet = createTileSet(mbtiles, server.getUrlTemplate(name));
-        if (type == Type.VECTOR) {
-            source = new VectorSource(name, tileSet);
-        } else if (type == Type.RASTER) {
-            source = new RasterSource(name, tileSet);
-        } else {
-            source = null;
+            throw new UnsupportedFormatException(format);
         }
     }
 
-    public Source getSource() {
-        return source;
+    public Type getType() {
+        return type;
+    }
+
+    public void close() {
+        db.close();
+    }
+
+    public Source getSource(String name, String urlTemplate) {
+        TileSet tileSet = createTileSet(this, urlTemplate);
+        if (type == Type.VECTOR) {
+            return new VectorSource(name, tileSet);
+        } else if (type == Type.RASTER) {
+            return new RasterSource(name, tileSet);
+        }
+        return null;
+    }
+
+    public @NonNull String getMetadata(String key) {
+        try (Cursor results = db.query("metadata", new String[] {"value"},
+            "name = ?", new String[] {key}, null, null, null, null)) {
+            return results.moveToFirst() ? results.getString(0) : "";
+        }
+    }
+
+    public TileHttpServer.Response getTile(int zoom, int x, int y) {
+        // TMS coordinates are used in .mbtiles files, so Y needs to be flipped.
+        byte[] data = getTileBlob(zoom, x, (1 << zoom) - 1 - y);
+        return data == null ? null :
+            new TileHttpServer.Response(data, contentType, contentEncoding);
+    }
+
+    public byte[] getTileBlob(int zoom, int column, int row) {
+        String selection = String.format(
+            "zoom_level = %d and tile_column = %d and tile_row = %d",
+            zoom, column, row
+        );
+        try (Cursor results = db.query("tiles", new String[] {"tile_data"},
+            selection, null, null, null, null)) {
+            return results.moveToFirst() ? results.getBlob(0) : null;
+        }
     }
 
     protected static TileSet createTileSet(MbtilesFile mbtiles, String urlTemplate) {
@@ -99,62 +124,18 @@ public class MbtilesSource implements Closeable, TileHttpServer.TileSource {
         return tileSet;
     }
 
-    public TileHttpServer.Response getTile(int zoom, int x, int y) {
-        // TMS coordinates are used in .mbtiles files, so Y needs to be flipped.
-        byte[] data = mbtiles.getTileBlob(zoom, x, (1 << zoom) - 1 - y);
-        return data == null ? null :
-            new TileHttpServer.Response(data, contentType, contentEncoding);
-    }
-
-    public Type getType() {
-        return type;
-    }
-
     /** Returns information about the vector layers available in the tiles. */
     public List<VectorLayer> getVectorLayers() {
         List<VectorLayer> layers = new ArrayList<>();
         JSONArray jsonLayers;
         try {
-            JSONObject json = new JSONObject(mbtiles.getMetadata("json"));
+            JSONObject json = new JSONObject(getMetadata("json"));
             jsonLayers = json.getJSONArray("vector_layers");
             for (int i = 0; i < jsonLayers.length(); i++) {
                 layers.add(new VectorLayer(jsonLayers.getJSONObject(i)));
             }
         } catch (JSONException e) { /* ignore */ }
         return layers;
-    }
-
-    public void close() {
-        mbtiles.close();
-    }
-
-    protected static class MbtilesFile implements Closeable {
-        final SQLiteDatabase db;
-
-        public MbtilesFile(File file) throws SQLiteException {
-            db = SQLiteDatabase.openOrCreateDatabase(file, null);
-        }
-
-        public @NonNull String getMetadata(String key) {
-            Cursor results = db.query("metadata", new String[] {"value"},
-                "name = ?", new String[] {key}, null, null, null, null);
-            return results.moveToFirst() ? results.getString(0) : "";
-        }
-
-        public byte[] getTileBlob(int zoom, int column, int row) {
-            String selection = String.format(
-                "zoom_level = %d and tile_column = %d and tile_row = %d",
-                zoom, column, row
-            );
-            try (Cursor results = db.query("tiles", new String[] {"tile_data"},
-                selection, null, null, null, null)) {
-                return results.moveToFirst() ? results.getBlob(0) : null;
-            }
-        }
-
-        public void close() {
-            db.close();
-        }
     }
 
     public static class VectorLayer {
@@ -164,6 +145,12 @@ public class MbtilesSource implements Closeable, TileHttpServer.TileSource {
         public VectorLayer(JSONObject json) {
             name = json.optString("id", "");
             description = json.optString("description", "");
+        }
+    }
+
+    public class UnsupportedFormatException extends IOException {
+        public UnsupportedFormatException(String format) {
+            super(String.format("Unrecognized .mbtiles format \"%s\"", format));
         }
     }
 }
