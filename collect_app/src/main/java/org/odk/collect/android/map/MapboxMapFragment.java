@@ -84,6 +84,13 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
     public static final long LOCATION_INTERVAL_MILLIS = 1000;
     public static final long LOCATION_MAX_WAIT_MILLIS = 5 * LOCATION_INTERVAL_MILLIS;
 
+    // On some devices, Mapbox.getInstance() crashes when passed an empty access
+    // token (a hard, native-level assertion failure, not a catchable exception).
+    // The dummy access token is not a valid access token, just a string that's
+    // well-formed enough to avoid this crash.
+    protected static final String DUMMY_ACCESS_TOKEN = "pk.";
+    protected static final boolean ACCESS_TOKEN_MISSING = BuildConfig.MAPBOX_ACCESS_TOKEN.isEmpty();
+
     protected MapboxMap map;
     protected ReadyListener readyListener;
     protected List<MapFragment.ReadyListener> gpsLocationReadyListeners = new ArrayList<>();
@@ -105,7 +112,6 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
 
     protected TileHttpServer tileServer;
 
-
     // During Robolectric tests, Google Play Services is unavailable; sadly, the
     // "map" field will be null and many operations will need to be stubbed out.
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This flag is exposed for Robolectric tests to set")
@@ -113,8 +119,10 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
 
     @Override public void addTo(@NonNull FragmentActivity activity, int containerId, @Nullable ReadyListener listener) {
         // To use the Mapbox SDK, we have to initialize it with an access token.
-        // Configure this token in collect_app/secrets.properties.
-        Mapbox.getInstance(Collect.getInstance(), BuildConfig.MAPBOX_ACCESS_TOKEN);
+        // Configure this token in collect_app/secrets.properties.  If it is not
+        // defined, we'll use DUMMY_ACCESS_TOKEN instead.
+        String token = ACCESS_TOKEN_MISSING ? DUMMY_ACCESS_TOKEN : BuildConfig.MAPBOX_ACCESS_TOKEN;
+        Mapbox.getInstance(Collect.getInstance(), token);
 
         // Mapbox SDK only knows how to fetch tiles via HTTP.  If we want it to
         // display tiles from a local file, we have to serve them locally over HTTP.
@@ -132,9 +140,8 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
             assert mapView != null;  // should have been initialized by now
 
             map.setStyle(getDesiredMapboxStyle(), style -> {
-                if (BuildConfig.MAPBOX_ACCESS_TOKEN.isEmpty()) {
-                    // An access token is required in order to fetch the Mapbox
-                    // base map data; if no token, fall back to the OSM base map.
+                // If we can't use the Mapbox base map, fall back to the OSM base map.
+                if (ACCESS_TOKEN_MISSING) {
                     style.addSource(new RasterSource("[osm]", new TileSet(
                         "2.2.0",
                         "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
