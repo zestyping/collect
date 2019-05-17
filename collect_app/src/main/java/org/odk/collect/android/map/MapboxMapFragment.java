@@ -678,6 +678,7 @@ public class MapboxMapFragment extends MapboxSdkMapFragment implements MapFragme
                 .withLineWidth(STROKE_WIDTH)
                 .withLatLngs(new ArrayList<>())
             );
+            updateLine();
             symbolManager.addDragListener(dragListener);
         }
 
