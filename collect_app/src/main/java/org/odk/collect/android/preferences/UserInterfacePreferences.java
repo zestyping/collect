@@ -198,9 +198,12 @@ public class UserInterfacePreferences extends BasePreferenceFragment {
             return;
         }
 
+        if (mapSdk.getValue() == null || mapSdk.getEntry() == null) {
+            mapSdk.setValueIndex(0);  // use the first option as the default
+        }
+
         String[] onlineLayerEntryValues;
         String[] onlineLayerEntries;
-
         if (mapSdk.getValue().equals(OSM_BASEMAP_KEY)) {
             onlineLayerEntryValues = getResources().getStringArray(R.array.map_osm_basemap_selector_entry_values);
             onlineLayerEntries = getResources().getStringArray(R.array.map_osm_basemap_selector_entries);
