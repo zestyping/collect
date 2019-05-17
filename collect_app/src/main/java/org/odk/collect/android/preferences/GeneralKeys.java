@@ -86,7 +86,7 @@ public final class GeneralKeys {
     public static final String MAPBOX_MAPS_BASEMAP_DEFAULT  = "mapbox_streets";
     public static final String MAPBOX_MAP_STYLE_KEY         = "mapbox_map_style";
 
-    public static final String DEFAULT_BASEMAP_KEY = OSM_BASEMAP_KEY;
+    public static final String DEFAULT_BASEMAP_KEY = MAPBOX_BASEMAP_KEY;
 
     private static HashMap<String, Object> getHashMap() {
         HashMap<String, Object> hashMap = new HashMap<>();
