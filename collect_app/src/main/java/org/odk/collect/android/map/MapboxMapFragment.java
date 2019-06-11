@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.Gravity;
 
 import com.mapbox.android.core.location.LocationEngine;
@@ -45,12 +44,10 @@ import org.odk.collect.android.BuildConfig;
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.mapboxsdk.MapFragment;
-import org.odk.collect.android.preferences.GeneralKeys;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,22 +80,6 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
     public static final long LOCATION_INTERVAL_MILLIS = 1000;
     public static final long LOCATION_MAX_WAIT_MILLIS = 5 * LOCATION_INTERVAL_MILLIS;
 
-    // Map from preference values (defined by map_mapbox_basemap_selector_entry_values)
-    // to base map style URLs.
-    private static Map<String, String> initStyleUrls() {
-        Map<String, String> map = new HashMap<>();
-        map.put(GeneralKeys.MAPBOX_MAP_STREETS, Style.MAPBOX_STREETS);
-        map.put(GeneralKeys.MAPBOX_MAP_LIGHT, Style.LIGHT);
-        map.put(GeneralKeys.MAPBOX_MAP_DARK, Style.DARK);
-        map.put(GeneralKeys.MAPBOX_MAP_SATELLITE, Style.SATELLITE);
-        map.put(GeneralKeys.MAPBOX_MAP_SATELLITE_STREETS, Style.SATELLITE_STREETS);
-        map.put(GeneralKeys.MAPBOX_MAP_OUTDOORS, Style.OUTDOORS);
-        return Collections.unmodifiableMap(map);
-    }
-
-    protected static final Map<String, String> STYLE_URLS = initStyleUrls();
-    protected static final String DEFAULT_STYLE_URL = Style.MAPBOX_STREETS;
-
     protected MapboxMap map;
     protected List<ReadyListener> gpsLocationReadyListeners = new ArrayList<>();
     protected PointListener gpsLocationListener;
@@ -115,6 +96,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
     protected SymbolManager symbolManager;
     protected LineManager lineManager;
     protected boolean isDragging;
+    protected final String styleUrl;
 
     protected TileHttpServer tileServer;
 
@@ -122,6 +104,10 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
     // "map" field will be null and many operations will need to be stubbed out.
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This flag is exposed for Robolectric tests to set")
     @VisibleForTesting public static boolean testMode;
+
+    public MapboxMapFragment(String styleUrl) {
+        this.styleUrl = styleUrl;
+    }
 
     @Override public void addTo(@NonNull FragmentActivity activity, int containerId, @Nullable ReadyListener listener) {
         if (MapboxUtils.initMapbox() == null) {
@@ -210,9 +196,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
                 .withSource(new RasterSource("[osm]", tiles, 256))
                 .withLayer(new RasterLayer("[osm]", "[osm]"));
         }
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String url = STYLE_URLS.get(prefs.getString(GeneralKeys.KEY_MAP_BASEMAP, null));
-        return new Style.Builder().fromUrl(url == null ? DEFAULT_STYLE_URL : url);
+        return new Style.Builder().fromUrl(styleUrl);
     }
 
     @SuppressWarnings("TimberExceptionLogging")

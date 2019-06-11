@@ -519,7 +519,6 @@
   <string name="wifi_autosend">Pouze Wifi</string>
   <string name="cellular_autosend">Pouze mobilní</string>
   <string name="wifi_cellular_autosend">Wifi nebo mobilní</string>
-  <string name="map_basemap_behavior_title">Základní mapa</string>
   <string name="form_management_preferences">Správa dotazníků</string>
   <string name="form_submission_category">Odeslání dotazníku</string>
   <string name="form_filling_category">Plnění dotazníku</string>

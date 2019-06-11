@@ -15,6 +15,7 @@
 package org.odk.collect.android.activities;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -33,6 +34,7 @@ import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
 import org.odk.collect.android.map.MapboxMapFragment;
 import org.odk.collect.android.map.OsmMapFragment;
+import org.odk.collect.android.preferences.PreferenceUtils;
 import org.odk.collect.android.spatial.MapHelper;
 import org.odk.collect.android.utilities.ToastUtils;
 import org.osmdroid.tileprovider.IRegisterReceiver;
@@ -135,7 +137,11 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
         setTitle(getString(outputMode == OutputMode.GEOTRACE ?
             R.string.geotrace_title : R.string.geoshape_title));
         setContentView(R.layout.geopoly_layout);
-        createMapFragment().addTo(this, R.id.map_container, this::initMap);
+
+        Context context = getApplicationContext();
+        PreferenceUtils.getSelectedBaseLayer(context)
+            .createMapFragment(context)
+            .addTo(this, R.id.map_container, this::initMap);
     }
 
     @Override protected void onStart() {

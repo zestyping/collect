@@ -523,7 +523,6 @@
   <string name="wifi_autosend">Samo Wifi</string>
   <string name="cellular_autosend">Samo mrežni podaci</string>
   <string name="wifi_cellular_autosend">Wifi ili mrežni podaci</string>
-  <string name="map_basemap_behavior_title">Osnovna mapa</string>
   <string name="form_management_preferences">Upravljanje formularima</string>
   <string name="form_submission_category">Otpremanje formulara</string>
   <string name="form_filling_category">Ispunjavanje formulara</string>

@@ -466,7 +466,6 @@ Escolher Imagem</string>
   <string name="wifi_autosend">Somente wifi</string>
   <string name="cellular_autosend">Somente celular</string>
   <string name="wifi_cellular_autosend">Wifi ou celular</string>
-  <string name="map_basemap_behavior_title">Mapa base</string>
   <string name="form_management_preferences">Gestão de formulários</string>
   <string name="form_submission_category">Envio de formulários</string>
   <string name="form_filling_category">Preenchimento de formulários</string>

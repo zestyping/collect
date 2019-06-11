@@ -526,7 +526,6 @@
   <string name="wifi_autosend">Tylko wifi</string>
   <string name="cellular_autosend">Tylko sieć</string>
   <string name="wifi_cellular_autosend">Wifi oraz sieć</string>
-  <string name="map_basemap_behavior_title">Mapa bazowa</string>
   <string name="form_management_preferences">Zarządzanie formularzem</string>
   <string name="form_submission_category">Przesyłanie formularzu</string>
   <string name="form_filling_category">Wypełnianie formularzu</string>

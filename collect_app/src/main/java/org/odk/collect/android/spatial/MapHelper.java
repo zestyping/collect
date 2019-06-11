@@ -90,7 +90,7 @@ public class MapHelper {
         osmMap = null;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         offilineOverlays = getOfflineLayerList();
-        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory();
     }
 
     public MapHelper(Context context, GoogleMap googleMap, Integer selectedLayer) {
@@ -99,7 +99,7 @@ public class MapHelper {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         offilineOverlays = getOfflineLayerList();
         this.googleMap = googleMap;
-        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory();
         this.selectedLayer = selectedLayer == null ? 0 : selectedLayer;
     }
 
@@ -110,16 +110,16 @@ public class MapHelper {
         offilineOverlays = getOfflineLayerList();
         this.iregisterReceiver = iregisterReceiver;
         this.osmMap = osmMap;
-        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory();
         this.selectedLayer = selectedLayer == null ? 0 : selectedLayer;
     }
 
     private static String getGoogleBasemap() {
-        return sharedPreferences.getString(GeneralKeys.KEY_MAP_BASEMAP, GOOGLE_MAP_STREETS);
+        return sharedPreferences.getString(GeneralKeys.KEY_GOOGLE_MAP_STYLE, GOOGLE_MAP_STREETS);
     }
 
     private static String getOsmBasemap() {
-        return sharedPreferences.getString(GeneralKeys.KEY_MAP_BASEMAP, OPENMAP_STREETS);
+        return OPENMAP_STREETS;
     }
 
     public void setBasemap() {
