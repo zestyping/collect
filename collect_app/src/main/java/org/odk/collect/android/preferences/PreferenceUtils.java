@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PreferenceUtils {
-    private static final Map<String, BaseLayerType> BASE_LAYER_MAP = getBaseLayerMap();
+    private static final Map<String, BaseLayerType> BASE_LAYER_TYPE_MAP = getBaseLayerTypeMap();
     private static final BaseLayerType DEFAULT_BASE_LAYER_TYPE = new GoogleBaseLayerType();
 
     private PreferenceUtils() { }  // prevent instantiation of this utility class
@@ -29,15 +29,15 @@ public class PreferenceUtils {
     }
 
     /** Gets the BaseLayerType object corresponding to the current base_layer_type preference. */
-    public static BaseLayerType getSelectedBaseLayer(Context context) {
-        String baseLayerValue = getSharedPreferences(context).getString(
+    public static BaseLayerType getSelectedBaseLayerType(Context context) {
+        String value = getSharedPreferences(context).getString(
             GeneralKeys.KEY_BASE_LAYER_TYPE, GeneralKeys.BASE_LAYER_TYPE_GOOGLE);
-        return getBaseLayer(baseLayerValue);
+        return getBaseLayerType(value);
     }
 
     /** Gets the BaseLayerType object for a given base_layer_type preference value. */
-    public static BaseLayerType getBaseLayer(String value) {
-        BaseLayerType result = BASE_LAYER_MAP.get(value);
+    public static BaseLayerType getBaseLayerType(String value) {
+        BaseLayerType result = BASE_LAYER_TYPE_MAP.get(value);
         return result == null ? DEFAULT_BASE_LAYER_TYPE : result;
     }
 
@@ -80,7 +80,7 @@ public class PreferenceUtils {
         }
     }
 
-    private static Map<String, BaseLayerType> getBaseLayerMap() {
+    private static Map<String, BaseLayerType> getBaseLayerTypeMap() {
         TileSourceFactory factory = new TileSourceFactory();
         Map<String, BaseLayerType> map = new HashMap<>();
         map.put(GeneralKeys.BASE_LAYER_TYPE_GOOGLE, new GoogleBaseLayerType());

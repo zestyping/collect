@@ -139,7 +139,7 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
         setContentView(R.layout.geopoly_layout);
 
         Context context = getApplicationContext();
-        PreferenceUtils.getSelectedBaseLayer(context)
+        PreferenceUtils.getSelectedBaseLayerType(context)
             .createMapFragment(context)
             .addTo(this, R.id.map_container, this::initMap);
     }

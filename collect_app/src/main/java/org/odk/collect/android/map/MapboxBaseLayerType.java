@@ -8,11 +8,22 @@ import android.preference.PreferenceManager;
 import com.mapbox.mapboxsdk.maps.Style;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.PreferenceUtils;
 
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_MAPBOX_MAP_STYLE;
 
 public class MapboxBaseLayerType implements BaseLayerType {
+    @Override public void onSelected() {
+        // Too keep our APK from getting too big, we decided to include the
+        // Mapbox native library only for the most common binary architectures.
+        // So, on a small minority of Android devices, the Mapbox SDK will not
+        // run; let's warn the user when they choose Mapbox in the settings.
+        if (MapboxUtils.initMapbox() == null) {
+            MapboxUtils.warnMapboxUnsupported(Collect.getInstance());
+        }
+    }
+
     @Override public void addPreferences(PreferenceCategory category) {
         category.addPreference(
             PreferenceUtils.createListPreference(
@@ -40,6 +51,10 @@ public class MapboxBaseLayerType implements BaseLayerType {
     }
 
     @Override public MapFragment createMapFragment(Context context) {
+        if (MapboxUtils.initMapbox() == null) {
+            MapboxUtils.warnMapboxUnsupported(Collect.getInstance());
+            return null;
+        }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String styleUrl = prefs.getString(KEY_MAPBOX_MAP_STYLE, Style.MAPBOX_STREETS);
         return new MapboxMapFragment(styleUrl);

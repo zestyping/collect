@@ -21,6 +21,7 @@ import android.preference.PreferenceCategory;
 import android.view.View;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.map.BaseLayerType;
 
 import androidx.annotation.Nullable;
 
@@ -50,9 +51,9 @@ public class MapsPreferences extends BasePreferenceFragment {
             context, KEY_BASE_LAYER_TYPE, R.string.base_layer_type,
             R.array.base_layer_type_entries, R.array.base_layer_type_values
         );
-        populateBaseLayerOptions(baseLayerTypePreference.getValue());
+        onBaseLayerTypeSelected(baseLayerTypePreference.getValue());
         baseLayerTypePreference.setOnPreferenceChangeListener((pref, value) -> {
-            populateBaseLayerOptions(value.toString());
+            onBaseLayerTypeSelected(value.toString());
             return true;
         });
     }
@@ -71,11 +72,13 @@ public class MapsPreferences extends BasePreferenceFragment {
         }
     }
 
-    private void populateBaseLayerOptions(String value) {
+    private void onBaseLayerTypeSelected(String value) {
+        BaseLayerType baseLayerType = PreferenceUtils.getBaseLayerType(value);
+        baseLayerType.onSelected();
         PreferenceCategory category = (PreferenceCategory) findPreference(KEY_BASE_LAYER);
         category.removeAll();
         category.addPreference(baseLayerTypePreference);
-        PreferenceUtils.getBaseLayer(value).addPreferences(category);
+        baseLayerType.addPreferences(category);
     }
 
     private boolean failedLoadingMapPrefs(ListPreference mapSdk, ListPreference mapBasemap) {

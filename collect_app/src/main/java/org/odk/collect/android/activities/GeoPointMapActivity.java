@@ -130,7 +130,7 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
         zoomButton = findViewById(R.id.zoom);
 
         Context context = getApplicationContext();
-        PreferenceUtils.getSelectedBaseLayer(context)
+        PreferenceUtils.getSelectedBaseLayerType(context)
             .createMapFragment(context)
             .addTo(this, R.id.map_container, this::initMap);
     }
