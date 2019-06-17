@@ -307,24 +307,6 @@
   <string name="leave_a_review">Залишити відгук в Play Store</string>
   <string name="leave_a_review_msg">Ваш (сподіваємось позитивний) відгук покращить помітність програми в Play Store.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="map_sdk_selector_title">SDK для мапування</string>
-  <string name="map_sdk_behavior">SDK для мапування</string>
-  <string name="google_maps_sdk">Google Карти SDK</string>
-  <string name="openstreetmap_sdk">OpenStreetMap SDK</string>
-  <string name="show_map_sdk">Відобразити налаштування Map SDK</string>
-  <string name="openmap_streets">OSM Вулиці</string>
-  <string name="openmap_usgs_topo">USGS топографічна національна карта</string>
-  <string name="openmap_usgs_sat">USGS Національна мапа Гібрид</string>
-  <string name="openmap_usgs_img">USGS Національна мапа Картинки</string>
-  <string name="openmap_stamen_terrain">Stamen Ландшафт</string>
-  <string name="openmap_cartodb_positron">CartoDB Positron</string>
-  <string name="openmap_cartodb_darkmatter">CartoDB Dark Matter</string>
-  <string name="streets">Вулиці</string>
-  <string name="terrain">Ландшафт</string>
-  <string name="hybrid">Змішана</string>
-  <string name="satellite">Супутник</string>
-  <string name="map_basemap_selector_title">Базова мапа</string>
-  <string name="show_map_basemap">Показати параметри базової мапи</string>
   <string name="save_point">Зберегти ГеоТочку</string>
   <string name="get_point">Записати ГеоТочку</string>
   <string name="geopoint_view_read_only">Переглянути ГеоТочку</string>

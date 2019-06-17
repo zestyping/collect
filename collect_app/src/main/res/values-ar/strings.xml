@@ -307,24 +307,6 @@
   <string name="leave_a_review">اترك تعليق في Play Store</string>
   <string name="leave_a_review_msg">رأيك (نأمل إيجابيا) يزيد من رؤية التطبيق في Play Store.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="map_sdk_selector_title">خدمة الخريطة</string>
-  <string name="map_sdk_behavior">الخريطة</string>
-  <string name="google_maps_sdk">خريطة جوجل</string>
-  <string name="openstreetmap_sdk">خريطة OpenStreet</string>
-  <string name="show_map_sdk">عرض خيارات الخريطة</string>
-  <string name="openmap_streets">اخريطة لطرق</string>
-  <string name="openmap_usgs_topo">خرطة البنية</string>
-  <string name="openmap_usgs_sat">خريطة وطنية هجين USGS</string>
-  <string name="openmap_usgs_img">صور الخريطة الوطنية USGS</string>
-  <string name="openmap_stamen_terrain">خريطة التضاريس</string>
-  <string name="openmap_cartodb_positron">خريطة CartoDB</string>
-  <string name="openmap_cartodb_darkmatter">خريطة CartoDB</string>
-  <string name="streets">الطرق</string>
-  <string name="terrain">التضاريس</string>
-  <string name="hybrid">الكل</string>
-  <string name="satellite">اقمار اصطناعية</string>
-  <string name="map_basemap_selector_title">الخريطة</string>
-  <string name="show_map_basemap">عرض خيارات الخريطة</string>
   <string name="save_point">حفظ GeoPint</string>
   <string name="get_point">تشغيل GeoPoint</string>
   <string name="geopoint_view_read_only">عرض نقاط الخريطة</string>
