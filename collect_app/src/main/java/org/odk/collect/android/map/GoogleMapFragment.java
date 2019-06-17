@@ -105,9 +105,6 @@ public class GoogleMapFragment extends SupportMapFragment implements
         getMapAsync((GoogleMap map) -> {
             if (map == null) {
                 ToastUtils.showShortToast(R.string.google_play_services_error_occured);
-                if (listener != null) {
-                    listener.onReady(null);
-                }
                 return;
             }
             this.map = map;
