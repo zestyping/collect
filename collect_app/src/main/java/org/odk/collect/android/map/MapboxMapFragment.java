@@ -98,6 +98,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
     protected LineManager lineManager;
     protected boolean isDragging;
     protected final String styleUrl;
+    protected final File referenceLayer;
 
     protected TileHttpServer tileServer;
 
@@ -106,8 +107,9 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This flag is exposed for Robolectric tests to set")
     @VisibleForTesting public static boolean testMode;
 
-    public MapboxMapFragment(String styleUrl) {
+    public MapboxMapFragment(String styleUrl, File referenceLayer) {
         this.styleUrl = styleUrl;
+        this.referenceLayer = referenceLayer;
     }
 
     @Override public void addTo(@NonNull FragmentActivity activity, int containerId, @Nullable ReadyListener listener) {
@@ -134,12 +136,8 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
             this.map = map;  // signature of getMapAsync() ensures map is never null
 
             map.setStyle(getDesiredStyleBuilder(), style -> {
-                for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
-                    String name = file.getName();
-                    if (name.endsWith(".mbtiles")) {
-                        String id = name.substring(0, name.length() - ".mbtiles".length());
-                        addMbtiles(style, id, file);
-                    }
+                if (referenceLayer != null) {
+                    addMbtiles(style, referenceLayer.getName(), referenceLayer);
                 }
 
                 map.getUiSettings().setCompassGravity(Gravity.TOP | Gravity.START);
