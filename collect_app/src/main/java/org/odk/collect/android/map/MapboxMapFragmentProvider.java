@@ -18,7 +18,7 @@ import timber.log.Timber;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_MAPBOX_MAP_STYLE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 
-public class MapboxBaseLayerType implements BaseLayerType {
+public class MapboxMapFragmentProvider implements MapFragmentProvider {
     @Override public String getId() {
         return "mapbox";
     }
@@ -28,7 +28,7 @@ public class MapboxBaseLayerType implements BaseLayerType {
     }
 
     @Override public void onSelected() {
-        // Too keep our APK from getting too big, we decided to include the
+        // To keep our APK from getting too big, we decided to include the
         // Mapbox native library only for the most common binary architectures.
         // So, on a small minority of Android devices, the Mapbox SDK will not
         // run; let's warn the user when they choose Mapbox in the settings.

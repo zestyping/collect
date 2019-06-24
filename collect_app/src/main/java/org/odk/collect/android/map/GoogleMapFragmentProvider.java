@@ -18,7 +18,7 @@ import timber.log.Timber;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_GOOGLE_MAP_STYLE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 
-public class GoogleBaseLayerType implements BaseLayerType {
+public class GoogleMapFragmentProvider implements MapFragmentProvider {
     @Override public String getId() {
         return "google";
     }

@@ -12,7 +12,7 @@ import java.io.File;
 
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 
-public class WmsBaseLayerType implements BaseLayerType {
+public class WmsMapFragmentProvider implements MapFragmentProvider {
     private final String bltId;
     private final int nameId;
     private final String prefKey;
@@ -20,7 +20,7 @@ public class WmsBaseLayerType implements BaseLayerType {
     private final WmsOption[] options;
 
     /** Constructs a base layer that provides just one Web Map Service. */
-    public WmsBaseLayerType(String bltId, int nameId, OnlineTileSourceBase source) {
+    public WmsMapFragmentProvider(String bltId, int nameId, OnlineTileSourceBase source) {
         this.bltId = bltId;
         this.nameId = nameId;
         prefKey = "";
@@ -32,7 +32,7 @@ public class WmsBaseLayerType implements BaseLayerType {
      * Constructs a base layer that provides a few Web Map Services to choose from.
      * The choice of which Web Map Service will be stored in a string preference.
      */
-    public WmsBaseLayerType(
+    public WmsMapFragmentProvider(
         String bltId, int nameId,
         String prefKey, int prefTitleId,
         WmsOption... options

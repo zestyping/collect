@@ -3,7 +3,7 @@ package org.odk.collect.android.map;
 import android.content.Context;
 
 import org.odk.collect.android.R;
-import org.odk.collect.android.map.WmsBaseLayerType.WmsOption;
+import org.odk.collect.android.map.WmsMapFragmentProvider.WmsOption;
 import org.odk.collect.android.preferences.GeneralKeys;
 import org.odk.collect.android.preferences.PrefUtils;
 import org.odk.collect.android.spatial.TileSourceFactory;
@@ -14,27 +14,27 @@ import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_TYP
 public class BaseLayerTypeRegistry {
     private BaseLayerTypeRegistry() { }  // prevent instantiation of this utility class
 
-    private static BaseLayerType[] BASE_LAYER_TYPES = initBaseLayerTypes();
+    private static MapFragmentProvider[] BASE_LAYER_TYPES = initBaseLayerTypes();
 
     /** This array determines the order in which these appear in the menu. */
-    private static BaseLayerType[] initBaseLayerTypes() {
+    private static MapFragmentProvider[] initBaseLayerTypes() {
         TileSourceFactory factory = new TileSourceFactory();
-        return new BaseLayerType[] {
-            new GoogleBaseLayerType(),
-            new MapboxBaseLayerType(),
-            new WmsBaseLayerType("osm", R.string.base_layer_type_osm,
+        return new MapFragmentProvider[] {
+            new GoogleMapFragmentProvider(),
+            new MapboxMapFragmentProvider(),
+            new WmsMapFragmentProvider("osm", R.string.base_layer_type_osm,
                 TileSourceFactory.MAPNIK
             ),
-            new WmsBaseLayerType("usgs", R.string.base_layer_type_usgs,
+            new WmsMapFragmentProvider("usgs", R.string.base_layer_type_usgs,
                 GeneralKeys.KEY_USGS_MAP_STYLE, R.string.usgs_map_style,
                 new WmsOption(R.string.usgs_map_style_topo, "topo", factory.getUSGSTopo()),
                 new WmsOption(R.string.usgs_map_style_hybrid, "hybrid", factory.getUsgsSat()),
                 new WmsOption(R.string.usgs_map_style_imagery, "imagery", factory.getUsgsImg())
             ),
-            new WmsBaseLayerType("stamen", R.string.base_layer_type_stamen,
+            new WmsMapFragmentProvider("stamen", R.string.base_layer_type_stamen,
                 factory.getStamenTerrain()
             ),
-            new WmsBaseLayerType("carto", R.string.base_layer_type_carto,
+            new WmsMapFragmentProvider("carto", R.string.base_layer_type_carto,
                 GeneralKeys.KEY_CARTO_MAP_STYLE, R.string.carto_map_style,
                 new WmsOption(R.string.carto_map_style_positron, "positron", factory.getCartoDbPositron()),
                 new WmsOption(R.string.carto_map_style_dark_matter, "dark_matter", factory.getCartoDbDarkMatter())
@@ -43,11 +43,11 @@ public class BaseLayerTypeRegistry {
     }
 
     /**
-     * Gets the BaseLayerType with the given ID.  If no match for the ID is
+     * Gets the MapFragmentProvider with the given ID.  If no match for the ID is
      * found, this defaults to returning the first item defined in the array.
      */
-    public static BaseLayerType get(String bltId) {
-        for (BaseLayerType blt : BASE_LAYER_TYPES) {
+    public static MapFragmentProvider get(String bltId) {
+        for (MapFragmentProvider blt : BASE_LAYER_TYPES) {
             if (blt.getId().equals(bltId)) {
                 return blt;
             }
@@ -55,8 +55,8 @@ public class BaseLayerTypeRegistry {
         return BASE_LAYER_TYPES[0];
     }
 
-    /** Gets the BaseLayerType corresponding to the current base_layer_type preference. */
-    public static BaseLayerType getCurrent(Context context) {
+    /** Gets the MapFragmentProvider corresponding to the current base_layer_type preference. */
+    public static MapFragmentProvider getCurrent(Context context) {
         return get(PrefUtils.getSharedPrefs(context).getString(KEY_BASE_LAYER_TYPE, null));
     }
 

@@ -22,7 +22,7 @@ import android.view.View;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
-import org.odk.collect.android.map.BaseLayerType;
+import org.odk.collect.android.map.MapFragmentProvider;
 import org.odk.collect.android.map.BaseLayerTypeRegistry;
 
 import java.io.File;
@@ -92,25 +92,25 @@ public class MapsPreferences extends BasePreferenceFragment {
 
     /** Updates the rest of the preference UI when the Base Layer Type is changed. */
     private void onBaseLayerTypeChanged(String bltId) {
-        BaseLayerType baseLayerType = bltId == null ?
+        MapFragmentProvider mapFragmentProvider = bltId == null ?
             BaseLayerTypeRegistry.getCurrent(mContext) :
             BaseLayerTypeRegistry.get(bltId);
-        baseLayerType.onSelected();
+        mapFragmentProvider.onSelected();
 
         PreferenceCategory baseCategory = getCategory(CATEGORY_BASE_LAYER);
         baseCategory.removeAll();
         baseCategory.addPreference(mBaseLayerTypePref);
-        baseLayerType.addPreferences(baseCategory);
+        mapFragmentProvider.addPreferences(baseCategory);
 
         PreferenceCategory referenceCategory = getCategory(CATEGORY_REFERENCE_LAYER);
         referenceCategory.removeAll();
-        mReferenceLayerPref = createReferenceLayerPref(mContext, baseLayerType);
+        mReferenceLayerPref = createReferenceLayerPref(mContext, mapFragmentProvider);
         referenceCategory.addPreference(mReferenceLayerPref);
     }
 
     /** Creates the Reference Layer preference for a given base layer type. */
-    public static ListPreference createReferenceLayerPref(Context context, BaseLayerType baseLayerType) {
-        List<File> files = getSupportedLayerFiles(baseLayerType);
+    public static ListPreference createReferenceLayerPref(Context context, MapFragmentProvider mapFragmentProvider) {
+        List<File> files = getSupportedLayerFiles(mapFragmentProvider);
         ListPreference pref = PrefUtils.createListPref(
             context, KEY_REFERENCE_LAYER, R.string.layer_data,
             toFilenameArray(files, context), toPathArray(files)
@@ -118,7 +118,7 @@ public class MapsPreferences extends BasePreferenceFragment {
         pref.setDialogTitle(
             context.getString(R.string.layer_data_dialog_title,
                 Collect.OFFLINE_LAYERS,
-                context.getString(baseLayerType.getNameResourceId())
+                context.getString(mapFragmentProvider.getNameResourceId())
             )
         );
         return pref;
@@ -129,7 +129,7 @@ public class MapsPreferences extends BasePreferenceFragment {
     }
 
     /** Gets the list of reference layer files supported by the current Base Layer Type. */
-    private static List<File> getSupportedLayerFiles(BaseLayerType blt) {
+    private static List<File> getSupportedLayerFiles(MapFragmentProvider blt) {
         List<File> files = new ArrayList<>();
         files.add(null);  // the first option to show is always "None"; see null checks below
         for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
