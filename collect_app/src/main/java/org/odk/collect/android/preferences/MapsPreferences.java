@@ -42,12 +42,6 @@ public class MapsPreferences extends BasePreferenceFragment {
     private ListPreference mReferenceLayerPref;
     private Context mContext;
 
-    /** Gets the BaseLayerType object corresponding to the current base_layer_type preference. */
-    public static BaseLayerType getBaseLayerType(Context context) {
-        String bltId = PrefUtils.getSharedPrefs(context).getString(KEY_BASE_LAYER_TYPE, null);
-        return BaseLayerTypeRegistry.get(bltId);
-    }
-
     public static MapsPreferences newInstance(boolean adminMode) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(INTENT_KEY_ADMIN_MODE, adminMode);
@@ -64,10 +58,6 @@ public class MapsPreferences extends BasePreferenceFragment {
 
         mContext = getPreferenceScreen().getContext();
         initBaseLayerTypePref();
-        initReferenceLayerPref();
-        String baseLayerType = mBaseLayerTypePref.getValue();
-        onBaseLayerTypeChanged(baseLayerType);
-        updateReferenceLayerPref(baseLayerType);
     }
 
     @Override
@@ -85,61 +75,61 @@ public class MapsPreferences extends BasePreferenceFragment {
     }
 
     /**
-     * Creates the Base Layer Type preference.  (But doesn't add it to the screen;
-     * onBaseLayerTypeChanged will do that part.)
+     * Creates the Base Layer Type preference (but doesn't add it to the screen;
+     * onBaseLayerTypeChanged will do that part).
      */
     private void initBaseLayerTypePref() {
-
         mBaseLayerTypePref = PrefUtils.createListPref(
             mContext, KEY_BASE_LAYER_TYPE, R.string.base_layer_type,
             BaseLayerTypeRegistry.getNameResourceIds(), BaseLayerTypeRegistry.getIds()
         );
+        onBaseLayerTypeChanged(null);
         mBaseLayerTypePref.setOnPreferenceChangeListener((pref, value) -> {
             onBaseLayerTypeChanged(value.toString());
             return true;
         });
     }
 
-    /** Creates and places the Reference Layer preference. */
-    private void initReferenceLayerPref() {
-        List<File> files = getReferenceLayerFiles(getBaseLayerType(mContext));
-        mReferenceLayerPref = PrefUtils.createListPref(
-            mContext, KEY_REFERENCE_LAYER, R.string.layer_data,
-            toFilenameArray(files), toPathArray(files)
-        );
-        getCategory(CATEGORY_REFERENCE_LAYER).addPreference(mReferenceLayerPref);
-    }
-
     /** Updates the rest of the preference UI when the Base Layer Type is changed. */
     private void onBaseLayerTypeChanged(String bltId) {
-        BaseLayerType blt = BaseLayerTypeRegistry.get(bltId);
-        blt.onSelected();
-        PreferenceCategory category = getCategory(CATEGORY_BASE_LAYER);
-        category.removeAll();
-        category.addPreference(mBaseLayerTypePref);
-        blt.addPreferences(category);
-        updateReferenceLayerPref(bltId);
+        BaseLayerType baseLayerType = bltId == null ?
+            BaseLayerTypeRegistry.getCurrent(mContext) :
+            BaseLayerTypeRegistry.get(bltId);
+        baseLayerType.onSelected();
+
+        PreferenceCategory baseCategory = getCategory(CATEGORY_BASE_LAYER);
+        baseCategory.removeAll();
+        baseCategory.addPreference(mBaseLayerTypePref);
+        baseLayerType.addPreferences(baseCategory);
+
+        PreferenceCategory referenceCategory = getCategory(CATEGORY_REFERENCE_LAYER);
+        referenceCategory.removeAll();
+        mReferenceLayerPref = createReferenceLayerPref(mContext, baseLayerType);
+        referenceCategory.addPreference(mReferenceLayerPref);
     }
 
-    /** Updates the list of available options for the Reference Layer. */
-    private void updateReferenceLayerPref(String bltId) {
-        BaseLayerType baseLayerType = BaseLayerTypeRegistry.get(bltId);
-        mReferenceLayerPref.setDialogTitle(
-            getString(R.string.layer_data_dialog_title,
+    /** Creates the Reference Layer preference for a given base layer type. */
+    public static ListPreference createReferenceLayerPref(Context context, BaseLayerType baseLayerType) {
+        List<File> files = getSupportedLayerFiles(baseLayerType);
+        ListPreference pref = PrefUtils.createListPref(
+            context, KEY_REFERENCE_LAYER, R.string.layer_data,
+            toFilenameArray(files, context), toPathArray(files)
+        );
+        pref.setDialogTitle(
+            context.getString(R.string.layer_data_dialog_title,
                 Collect.OFFLINE_LAYERS,
-                getString(baseLayerType.getNameResourceId())
+                context.getString(baseLayerType.getNameResourceId())
             )
         );
-        List<File> files = getReferenceLayerFiles(baseLayerType);
-        String[] entries = toFilenameArray(files);
-        String[] values = toPathArray(files);
-        mReferenceLayerPref.setEntries(entries);
-        mReferenceLayerPref.setEntryValues(values);
-        PrefUtils.ensurePrefHasValidValue(mContext, KEY_REFERENCE_LAYER, values);
+        return pref;
+    }
+
+    private PreferenceCategory getCategory(String key) {
+        return (PreferenceCategory) findPreference(key);
     }
 
     /** Gets the list of reference layer files supported by the current Base Layer Type. */
-    private List<File> getReferenceLayerFiles(BaseLayerType blt) {
+    private static List<File> getSupportedLayerFiles(BaseLayerType blt) {
         List<File> files = new ArrayList<>();
         files.add(null);  // the first option to show is always "None"; see null checks below
         for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
@@ -150,20 +140,16 @@ public class MapsPreferences extends BasePreferenceFragment {
         return files;
     }
 
-    private PreferenceCategory getCategory(String key) {
-        return (PreferenceCategory) findPreference(key);
-    }
-
-    private String[] toFilenameArray(List<File> files) {
+    private static String[] toFilenameArray(List<File> files, Context context) {
         String[] filenames = new String[files.size()];
         int i = 0;
         for (File file : files) {
-            filenames[i++] = file == null ? getString(R.string.none) : file.getName();
+            filenames[i++] = file == null ? context.getString(R.string.none) : file.getName();
         }
         return filenames;
     }
 
-    private String[] toPathArray(List<File> files) {
+    private static String[] toPathArray(List<File> files) {
         String[] paths = new String[files.size()];
         int i = 0;
         for (File file : files) {

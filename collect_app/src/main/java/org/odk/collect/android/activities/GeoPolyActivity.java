@@ -29,12 +29,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.map.BaseLayerTypeRegistry;
 import org.odk.collect.android.map.GoogleMapFragment;
 import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
 import org.odk.collect.android.map.MapboxMapFragment;
 import org.odk.collect.android.map.OsmMapFragment;
-import org.odk.collect.android.preferences.MapsPreferences;
 import org.odk.collect.android.spatial.MapHelper;
 import org.odk.collect.android.utilities.ToastUtils;
 import org.osmdroid.tileprovider.IRegisterReceiver;
@@ -139,7 +139,7 @@ public class GeoPolyActivity extends BaseGeoMapActivity implements IRegisterRece
         setContentView(R.layout.geopoly_layout);
 
         Context context = getApplicationContext();
-        MapsPreferences.getBaseLayerType(context)
+        BaseLayerTypeRegistry.getCurrent(context)
             .createMapFragment(context)
             .addTo(this, R.id.map_container, this::initMap);
     }

@@ -24,12 +24,12 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.map.BaseLayerTypeRegistry;
 import org.odk.collect.android.map.GoogleMapFragment;
 import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
 import org.odk.collect.android.map.MapboxMapFragment;
 import org.odk.collect.android.map.OsmMapFragment;
-import org.odk.collect.android.preferences.MapsPreferences;
 import org.odk.collect.android.spatial.MapHelper;
 import org.odk.collect.android.utilities.GeoPointUtils;
 import org.odk.collect.android.utilities.ToastUtils;
@@ -130,7 +130,7 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
         zoomButton = findViewById(R.id.zoom);
 
         Context context = getApplicationContext();
-        MapsPreferences.getBaseLayerType(context)
+        BaseLayerTypeRegistry.getCurrent(context)
             .createMapFragment(context)
             .addTo(this, R.id.map_container, this::initMap);
     }
