@@ -21,16 +21,32 @@ import android.preference.PreferenceCategory;
 import android.view.View;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.map.BaseLayerType;
+import org.odk.collect.android.map.BaseLayerTypeRegistry;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.Nullable;
 
-import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER;
+import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_BASE_LAYER;
+import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_REFERENCE_LAYER;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_TYPE;
+import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 import static org.odk.collect.android.preferences.PreferencesActivity.INTENT_KEY_ADMIN_MODE;
 
 public class MapsPreferences extends BasePreferenceFragment {
-    private ListPreference baseLayerTypePreference;
+    private ListPreference mBaseLayerTypePref;
+    private ListPreference mReferenceLayerPref;
+    private Context mContext;
+
+    /** Gets the BaseLayerType object corresponding to the current base_layer_type preference. */
+    public static BaseLayerType getBaseLayerType(Context context) {
+        String bltId = PrefUtils.getSharedPrefs(context).getString(KEY_BASE_LAYER_TYPE, null);
+        return BaseLayerTypeRegistry.get(bltId);
+    }
 
     public static MapsPreferences newInstance(boolean adminMode) {
         Bundle bundle = new Bundle();
@@ -46,16 +62,12 @@ public class MapsPreferences extends BasePreferenceFragment {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.maps_preferences);
 
-        Context context = getPreferenceScreen().getContext();
-        baseLayerTypePreference = PreferenceUtils.createListPreference(
-            context, KEY_BASE_LAYER_TYPE, R.string.base_layer_type,
-            R.array.base_layer_type_entries, R.array.base_layer_type_values
-        );
-        onBaseLayerTypeSelected(baseLayerTypePreference.getValue());
-        baseLayerTypePreference.setOnPreferenceChangeListener((pref, value) -> {
-            onBaseLayerTypeSelected(value.toString());
-            return true;
-        });
+        mContext = getPreferenceScreen().getContext();
+        initBaseLayerTypePref();
+        initReferenceLayerPref();
+        String baseLayerType = mBaseLayerTypePref.getValue();
+        onBaseLayerTypeChanged(baseLayerType);
+        updateReferenceLayerPref(baseLayerType);
     }
 
     @Override
@@ -72,20 +84,91 @@ public class MapsPreferences extends BasePreferenceFragment {
         }
     }
 
-    private void onBaseLayerTypeSelected(String value) {
-        BaseLayerType baseLayerType = PreferenceUtils.getBaseLayerType(value);
-        baseLayerType.onSelected();
-        PreferenceCategory category = (PreferenceCategory) findPreference(KEY_BASE_LAYER);
-        category.removeAll();
-        category.addPreference(baseLayerTypePreference);
-        baseLayerType.addPreferences(category);
+    /**
+     * Creates the Base Layer Type preference.  (But doesn't add it to the screen;
+     * onBaseLayerTypeChanged will do that part.)
+     */
+    private void initBaseLayerTypePref() {
+
+        mBaseLayerTypePref = PrefUtils.createListPref(
+            mContext, KEY_BASE_LAYER_TYPE, R.string.base_layer_type,
+            BaseLayerTypeRegistry.getNameResourceIds(), BaseLayerTypeRegistry.getIds()
+        );
+        mBaseLayerTypePref.setOnPreferenceChangeListener((pref, value) -> {
+            onBaseLayerTypeChanged(value.toString());
+            return true;
+        });
     }
 
-    private boolean failedLoadingMapPrefs(ListPreference mapSdk, ListPreference mapBasemap) {
-        return mapSdk == null || mapBasemap == null
-                || mapSdk.getEntryValues() == null || mapSdk.getEntries() == null
-                || mapSdk.getEntryValues().length == 0 || mapSdk.getEntries().length == 0
-                || mapBasemap.getEntryValues() == null || mapBasemap.getEntries() == null
-                || mapBasemap.getEntryValues().length == 0 || mapBasemap.getEntries().length == 0;
+    /** Creates and places the Reference Layer preference. */
+    private void initReferenceLayerPref() {
+        List<File> files = getReferenceLayerFiles(getBaseLayerType(mContext));
+        mReferenceLayerPref = PrefUtils.createListPref(
+            mContext, KEY_REFERENCE_LAYER, R.string.layer_data,
+            toFilenameArray(files), toPathArray(files)
+        );
+        getCategory(CATEGORY_REFERENCE_LAYER).addPreference(mReferenceLayerPref);
+    }
+
+    /** Updates the rest of the preference UI when the Base Layer Type is changed. */
+    private void onBaseLayerTypeChanged(String bltId) {
+        BaseLayerType blt = BaseLayerTypeRegistry.get(bltId);
+        blt.onSelected();
+        PreferenceCategory category = getCategory(CATEGORY_BASE_LAYER);
+        category.removeAll();
+        category.addPreference(mBaseLayerTypePref);
+        blt.addPreferences(category);
+        updateReferenceLayerPref(bltId);
+    }
+
+    /** Updates the list of available options for the Reference Layer. */
+    private void updateReferenceLayerPref(String bltId) {
+        BaseLayerType baseLayerType = BaseLayerTypeRegistry.get(bltId);
+        mReferenceLayerPref.setDialogTitle(
+            getString(R.string.layer_data_dialog_title,
+                Collect.OFFLINE_LAYERS,
+                getString(baseLayerType.getNameResourceId())
+            )
+        );
+        List<File> files = getReferenceLayerFiles(baseLayerType);
+        String[] entries = toFilenameArray(files);
+        String[] values = toPathArray(files);
+        mReferenceLayerPref.setEntries(entries);
+        mReferenceLayerPref.setEntryValues(values);
+        PrefUtils.ensurePrefHasValidValue(mContext, KEY_REFERENCE_LAYER, values);
+    }
+
+    /** Gets the list of reference layer files supported by the current Base Layer Type. */
+    private List<File> getReferenceLayerFiles(BaseLayerType blt) {
+        List<File> files = new ArrayList<>();
+        files.add(null);  // the first option to show is always "None"; see null checks below
+        for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
+            if (blt.supportsLayer(file)) {
+                files.add(file);
+            }
+        }
+        return files;
+    }
+
+    private PreferenceCategory getCategory(String key) {
+        return (PreferenceCategory) findPreference(key);
+    }
+
+    private String[] toFilenameArray(List<File> files) {
+        String[] filenames = new String[files.size()];
+        int i = 0;
+        for (File file : files) {
+            filenames[i++] = file == null ? getString(R.string.none) : file.getName();
+        }
+        return filenames;
+    }
+
+    private String[] toPathArray(List<File> files) {
+        String[] paths = new String[files.size()];
+        int i = 0;
+        for (File file : files) {
+            paths[i++] = file == null ? "" : file.getAbsolutePath();
+        }
+        return paths;
     }
 }

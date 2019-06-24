@@ -1,6 +1,5 @@
 package org.odk.collect.android.map;
 
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -42,6 +41,9 @@ import com.mapbox.mapboxsdk.utils.ColorUtils;
 
 import org.odk.collect.android.BuildConfig;
 import org.odk.collect.android.R;
+import org.odk.collect.android.application.Collect;
+import org.odk.collect.android.map.MbtilesFile.LayerType;
+import org.odk.collect.android.map.MbtilesFile.MbtilesException;
 import org.odk.collect.android.mapboxsdk.MapFragment;
 
 import java.io.File;
@@ -203,7 +205,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
         MbtilesFile mbtiles;
         try {
             mbtiles = new MbtilesFile(file);
-        } catch (MbtilesFile.UnsupportedFormatException e) {
+        } catch (MbtilesException e) {
             Timber.w(e.getMessage());
             return;
         }
@@ -211,7 +213,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
         TileSet tileSet = createTileSet(mbtiles, tileServer.getUrlTemplate(id));
         tileServer.addSource(id, mbtiles);
 
-        if (mbtiles.getType() == MbtilesFile.Type.VECTOR) {
+        if (mbtiles.getLayerType() == LayerType.VECTOR) {
             style.addSource(new VectorSource(id, tileSet));
             List<MbtilesFile.VectorLayer> layers = mbtiles.getVectorLayers();
             for (MbtilesFile.VectorLayer layer : layers) {
@@ -228,43 +230,47 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
                 ).withSourceLayer(layer.name));
             }
         }
-        if (mbtiles.getType() == MbtilesFile.Type.RASTER) {
+        if (mbtiles.getLayerType() == LayerType.RASTER) {
             style.addSource(new RasterSource(id, tileSet));
             style.addLayer(new RasterLayer(id + ".raster", id).withProperties(
                 rasterOpacity(0.5f)
             ));
         }
-        Timber.i("Added %s as a %s layer at /%s", file, mbtiles.getType(), id);
+        Timber.i("Added %s as a %s layer at /%s", file, mbtiles.getLayerType(), id);
     }
 
     private TileSet createTileSet(MbtilesFile mbtiles, String urlTemplate) {
         TileSet tileSet = new TileSet("2.2.0", urlTemplate);
 
         // Configure the TileSet using the metadata in the .mbtiles file.
-        tileSet.setName(mbtiles.getMetadata("name"));
         try {
-            tileSet.setMinZoom(Integer.parseInt(mbtiles.getMetadata("minzoom")));
-            tileSet.setMaxZoom(Integer.parseInt(mbtiles.getMetadata("maxzoom")));
-        } catch (NumberFormatException e) { /* ignore */ }
-
-        String[] parts = mbtiles.getMetadata("center").split(",");
-        if (parts.length == 3) {  // latitude, longitude, zoom
+            tileSet.setName(mbtiles.getMetadata("name"));
             try {
-                tileSet.setCenter(
-                    Float.parseFloat(parts[0]), Float.parseFloat(parts[1]),
-                    (float) Integer.parseInt(parts[2])
-                );
+                tileSet.setMinZoom(Integer.parseInt(mbtiles.getMetadata("minzoom")));
+                tileSet.setMaxZoom(Integer.parseInt(mbtiles.getMetadata("maxzoom")));
             } catch (NumberFormatException e) { /* ignore */ }
-        }
 
-        parts = mbtiles.getMetadata("bounds").split(",");
-        if (parts.length == 4) {  // left, bottom, right, top
-            try {
-                tileSet.setBounds(
-                    Float.parseFloat(parts[0]), Float.parseFloat(parts[1]),
-                    Float.parseFloat(parts[2]), Float.parseFloat(parts[3])
-                );
-            } catch (NumberFormatException e) { /* ignore */ }
+            String[] parts = mbtiles.getMetadata("center").split(",");
+            if (parts.length == 3) {  // latitude, longitude, zoom
+                try {
+                    tileSet.setCenter(
+                        Float.parseFloat(parts[0]), Float.parseFloat(parts[1]),
+                        (float) Integer.parseInt(parts[2])
+                    );
+                } catch (NumberFormatException e) { /* ignore */ }
+            }
+
+            parts = mbtiles.getMetadata("bounds").split(",");
+            if (parts.length == 4) {  // left, bottom, right, top
+                try {
+                    tileSet.setBounds(
+                        Float.parseFloat(parts[0]), Float.parseFloat(parts[1]),
+                        Float.parseFloat(parts[2]), Float.parseFloat(parts[3])
+                    );
+                } catch (NumberFormatException e) { /* ignore */ }
+            }
+        } catch (MbtilesException e) {
+            Timber.w(e.getMessage());
         }
 
         return tileSet;

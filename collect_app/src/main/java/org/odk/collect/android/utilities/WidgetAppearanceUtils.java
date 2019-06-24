@@ -28,7 +28,7 @@ import androidx.annotation.NonNull;
 import timber.log.Timber;
 
 public class WidgetAppearanceUtils {
-    private static final String EXCEPTION_PARSING_COLUMNS = "Exception parsing columns";
+    private static final String EXCEPTION_PARSING_COLUMNS = "MbtilesException parsing columns";
 
     // Date appearances
     public static final String ETHIOPIAN                = "ethiopian";

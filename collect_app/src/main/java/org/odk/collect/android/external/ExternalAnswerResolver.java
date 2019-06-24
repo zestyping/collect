@@ -118,7 +118,7 @@ public class ExternalAnswerResolver extends DefaultAnswerResolver {
                                 break;
                             }
                             default: {
-                                // There is a bug if we get here, so let's throw an Exception
+                                // There is a bug if we get here, so let's throw an MbtilesException
                                 throw createBugRuntimeException(treeElement, textVal);
                             }
                         }
@@ -150,7 +150,7 @@ public class ExternalAnswerResolver extends DefaultAnswerResolver {
                                 return new SelectMultiData(customSelections);
                             }
                             default: {
-                                // There is a bug if we get here, so let's throw an Exception
+                                // There is a bug if we get here, so let's throw an MbtilesException
                                 throw createBugRuntimeException(treeElement, textVal);
                             }
                         }

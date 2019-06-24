@@ -169,7 +169,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
             try {
                 dismissDialog(PROGRESS_DIALOG);
             } catch (Exception e) {
-                Timber.i("Exception was thrown while dismissing a dialog.");
+                Timber.i("MbtilesException was thrown while dismissing a dialog.");
             }
         }
         if (alertShowing) {
@@ -177,7 +177,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
                 dismissDialog(PROGRESS_DIALOG);
             } catch (Exception e) {
                 // don't care...
-                Timber.i("Exception was thrown while dismissing a dialog.");
+                Timber.i("MbtilesException was thrown while dismissing a dialog.");
             }
             createAlertDialog(alertMsg);
         }
@@ -501,7 +501,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
             dismissDialog(PROGRESS_DIALOG);
         } catch (Exception e) {
             // tried to close a dialog not open. don't care.
-            Timber.i("Exception thrown due to closing a dialog that was not open");
+            Timber.i("MbtilesException thrown due to closing a dialog that was not open");
         }
 
         StringBuilder sb = new StringBuilder();
@@ -713,7 +713,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
                         publishProgress(nextPage);
                     } catch (IOException e) {
                         if (!isCancelled()) {
-                            Timber.e(e, "Exception thrown while accessing the file list");
+                            Timber.e(e, "MbtilesException thrown while accessing the file list");
                         }
                     }
                 } while (request.getPageToken() != null && request.getPageToken().length() > 0);

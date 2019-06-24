@@ -87,24 +87,6 @@ the specific language governing permissions and limitations under the License. -
         <item>@string/image_size_large</item>
     </string-array>
 
-    <!-- Base layer -->
-    <string-array name="base_layer_type_entries">
-        <item>@string/base_layer_type_google</item>
-        <item>@string/base_layer_type_mapbox</item>
-        <item>@string/base_layer_type_osm</item>
-        <item>@string/base_layer_type_usgs</item>
-        <item>@string/base_layer_type_stamen</item>
-        <item>@string/base_layer_type_carto</item>
-    </string-array>
-    <string-array name="base_layer_type_values" translatable="false">
-        <item>base_layer_type_google</item>
-        <item>base_layer_type_mapbox</item>
-        <item>base_layer_type_osm</item>
-        <item>base_layer_type_usgs</item>
-        <item>base_layer_type_stamen</item>
-        <item>base_layer_type_carto</item>
-    </string-array>
-
     <string-array name="autosend_selector_entries">
         <item>@string/off</item>
         <item>@string/wifi_autosend</item>

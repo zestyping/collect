@@ -348,6 +348,10 @@
     <string name="carto_map_style_positron">Positron</string>
     <string name="carto_map_style_dark_matter">Dark Matter</string>
 
+    <string name="reference_layer">Reference layer</string>
+    <string name="layer_data">Layer data</string>
+    <string name="layer_data_dialog_title">Files in %s (supported by %s)</string>
+
     <string name="save_point">Save GeoPoint</string>
     <string name="get_point">Start GeoPoint</string>
     <string name="geopoint_view_read_only">View GeoPoint</string>

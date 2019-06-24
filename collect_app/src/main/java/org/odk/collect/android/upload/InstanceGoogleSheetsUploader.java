@@ -254,7 +254,7 @@ public class InstanceGoogleSheetsUploader extends InstanceUploader {
         try {
             uploadedFileId = driveHelper.uploadFileToDrive(filePath, folderId, toUpload);
         } catch (IOException e) {
-            Timber.e(e, "Exception thrown while uploading the file to drive");
+            Timber.e(e, "MbtilesException thrown while uploading the file to drive");
             throw new UploadException(e);
         }
 

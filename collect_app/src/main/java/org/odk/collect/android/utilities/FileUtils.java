@@ -238,7 +238,7 @@ public class FileUtils {
             } else if (e instanceof IOException) {
                 Timber.e(e, "IOException while copying file");
             } else {
-                Timber.e(e, "Exception while copying file");
+                Timber.e(e, "MbtilesException while copying file");
             }
             return e.getMessage();
         } finally {

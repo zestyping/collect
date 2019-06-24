@@ -145,7 +145,7 @@ public class TileHttpServer {
                         int y = Integer.parseInt(parts[3]);
                         TileSource source = sources.get(key);
                         if (source != null) {
-                            return source.getTile(zoom, x, y);
+                            byte[] data = source.getTileBlob(zoom, x, y);
                         }
                     } catch (NumberFormatException e) { /* ignore */ }
                 }
@@ -187,9 +187,5 @@ public class TileHttpServer {
             this.contentType = contentType;
             this.contentEncoding = contentEncoding;
         }
-    }
-
-    public interface TileSource {
-        Response getTile(int zoom, int x, int y);
     }
 }

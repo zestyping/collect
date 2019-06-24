@@ -5,24 +5,49 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 
-import org.odk.collect.android.preferences.PreferenceUtils;
+import org.odk.collect.android.preferences.PrefUtils;
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
 
+import java.io.File;
+
 public class WmsBaseLayerType implements BaseLayerType {
+    private final String bltId;
+    private final int nameId;
     private final String prefKey;
     private final int prefTitleId;
     private final WmsOption[] options;
 
-    public WmsBaseLayerType(OnlineTileSourceBase source) {
+    /** Constructs a base layer that provides just one Web Map Service. */
+    public WmsBaseLayerType(String bltId, int nameId, OnlineTileSourceBase source) {
+        this.bltId = bltId;
+        this.nameId = nameId;
         prefKey = "";
         prefTitleId = 0;
         options = new WmsOption[] {new WmsOption(0, "", source)};
     }
 
-    public WmsBaseLayerType(String prefKey, int prefTitleId, WmsOption... options) {
+    /**
+     * Constructs a base layer that provides a few Web Map Services to choose from.
+     * The choice of which Web Map Service will be stored in a string preference.
+     */
+    public WmsBaseLayerType(
+        String bltId, int nameId,
+        String prefKey, int prefTitleId,
+        WmsOption... options
+    ) {
+        this.bltId = bltId;
+        this.nameId = nameId;
         this.prefKey = prefKey;
         this.prefTitleId = prefTitleId;
         this.options = options;
+    }
+
+    @Override public String getId() {
+        return bltId;
+    }
+
+    @Override public int getNameResourceId() {
+        return nameId;
     }
 
     @Override public void addPreferences(PreferenceCategory category) {
@@ -35,7 +60,7 @@ public class WmsBaseLayerType implements BaseLayerType {
                 values[i] = option.value;
                 i++;
             }
-            category.addPreference(PreferenceUtils.createListPreference(
+            category.addPreference(PrefUtils.createListPref(
                 category.getContext(), prefKey, prefTitleId, labelIds, values));
         }
     }
@@ -53,6 +78,10 @@ public class WmsBaseLayerType implements BaseLayerType {
         } else {
             return new OsmMapFragment(options[0].source);
         }
+    }
+
+    @Override public boolean supportsLayer(File path) {
+        return false;
     }
 
     public static class WmsOption {

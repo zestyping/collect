@@ -9,11 +9,23 @@ import com.mapbox.mapboxsdk.maps.Style;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
-import org.odk.collect.android.preferences.PreferenceUtils;
+import org.odk.collect.android.preferences.PrefUtils;
+
+import java.io.File;
+
+import timber.log.Timber;
 
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_MAPBOX_MAP_STYLE;
 
 public class MapboxBaseLayerType implements BaseLayerType {
+    @Override public String getId() {
+        return "mapbox";
+    }
+
+    @Override public int getNameResourceId() {
+        return R.string.base_layer_type_mapbox;
+    }
+
     @Override public void onSelected() {
         // Too keep our APK from getting too big, we decided to include the
         // Mapbox native library only for the most common binary architectures.
@@ -26,7 +38,7 @@ public class MapboxBaseLayerType implements BaseLayerType {
 
     @Override public void addPreferences(PreferenceCategory category) {
         category.addPreference(
-            PreferenceUtils.createListPreference(
+            PrefUtils.createListPref(
                 category.getContext(),
                 KEY_MAPBOX_MAP_STYLE,
                 R.string.mapbox_map_style,
@@ -58,5 +70,18 @@ public class MapboxBaseLayerType implements BaseLayerType {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String styleUrl = prefs.getString(KEY_MAPBOX_MAP_STYLE, Style.MAPBOX_STREETS);
         return new MapboxMapFragment(styleUrl);
+    }
+
+    @Override public boolean supportsLayer(File file) {
+        if (file.getName().endsWith(".mbtiles")) {
+            try {
+                // MapboxMapFragment supports any file that MbtilesFile can read.
+                new MbtilesFile(file);
+                return true;
+            } catch (MbtilesFile.MbtilesException e) {
+                Timber.d(e);
+            }
+        }
+        return false;
     }
 }

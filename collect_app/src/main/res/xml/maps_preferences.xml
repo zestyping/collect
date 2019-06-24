@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:key="base_layer" android:title="@string/base_layer" />
+    <PreferenceCategory android:key="category_base_layer" android:title="@string/base_layer" />
+    <PreferenceCategory android:key="category_reference_layer" android:title="@string/reference_layer" />
 </PreferenceScreen>

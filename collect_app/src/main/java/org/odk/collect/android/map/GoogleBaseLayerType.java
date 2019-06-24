@@ -8,15 +8,28 @@ import android.preference.PreferenceManager;
 import com.google.android.gms.maps.GoogleMap;
 
 import org.odk.collect.android.R;
-import org.odk.collect.android.preferences.PreferenceUtils;
+import org.odk.collect.android.map.MbtilesFile.LayerType;
+import org.odk.collect.android.preferences.PrefUtils;
+
+import java.io.File;
+
+import timber.log.Timber;
 
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_GOOGLE_MAP_STYLE;
 
 public class GoogleBaseLayerType implements BaseLayerType {
+    @Override public String getId() {
+        return "google";
+    }
+
+    @Override public int getNameResourceId() {
+        return R.string.base_layer_type_google;
+    }
+
     @Override public void addPreferences(PreferenceCategory category) {
         Context context = category.getContext();
         category.addPreference(
-            PreferenceUtils.createListPreference(
+            PrefUtils.createListPref(
                 context,
                 KEY_GOOGLE_MAP_STYLE,
                 R.string.google_map_style,
@@ -41,5 +54,17 @@ public class GoogleBaseLayerType implements BaseLayerType {
         int mapType = Integer.valueOf(prefs.getString(
             KEY_GOOGLE_MAP_STYLE, Integer.toString(GoogleMap.MAP_TYPE_NORMAL)));
         return new GoogleMapFragment(mapType);
+    }
+
+    @Override public boolean supportsLayer(File file) {
+        if (file.getName().endsWith(".mbtiles")) {
+            try {
+                // GoogleMapFragment supports only raster tiles.
+                return new MbtilesFile(file).getLayerType() == LayerType.RASTER;
+            } catch (MbtilesFile.MbtilesException e) {
+                Timber.d(e);
+            }
+        }
+        return false;
     }
 }

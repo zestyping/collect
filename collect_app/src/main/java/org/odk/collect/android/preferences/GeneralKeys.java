@@ -61,8 +61,10 @@ public final class GeneralKeys {
     public static final String KEY_SPLASH_PATH              = "splashPath";
 
     // map_preferences.xml
-    public static final String KEY_BASE_LAYER               = "base_layer";
+    public static final String CATEGORY_BASE_LAYER          = "category_base_layer";
     public static final String KEY_BASE_LAYER_TYPE          = "base_layer_type";
+    public static final String CATEGORY_REFERENCE_LAYER     = "category_reference_layer";
+    public static final String KEY_REFERENCE_LAYER          = "reference_layer";
     public static final String BASE_LAYER_TYPE_GOOGLE       = "base_layer_type_google";
     public static final String BASE_LAYER_TYPE_MAPBOX       = "base_layer_type_mapbox";
     public static final String BASE_LAYER_TYPE_OSM          = "base_layer_type_osm";

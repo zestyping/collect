@@ -29,7 +29,7 @@ import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
 import org.odk.collect.android.map.MapboxMapFragment;
 import org.odk.collect.android.map.OsmMapFragment;
-import org.odk.collect.android.preferences.PreferenceUtils;
+import org.odk.collect.android.preferences.MapsPreferences;
 import org.odk.collect.android.spatial.MapHelper;
 import org.odk.collect.android.utilities.GeoPointUtils;
 import org.odk.collect.android.utilities.ToastUtils;
@@ -130,7 +130,7 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
         zoomButton = findViewById(R.id.zoom);
 
         Context context = getApplicationContext();
-        PreferenceUtils.getSelectedBaseLayerType(context)
+        MapsPreferences.getBaseLayerType(context)
             .createMapFragment(context)
             .addTo(this, R.id.map_container, this::initMap);
     }

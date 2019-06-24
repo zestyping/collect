@@ -112,14 +112,14 @@ public final class SharedPreferencesUtils {
             Collect.getInstance().initProperties();
             res = true;
         } catch (IOException e) {
-            Timber.e(e, "Exception while loading preferences from file due to : %s ", e.getMessage());
+            Timber.e(e, "MbtilesException while loading preferences from file due to : %s ", e.getMessage());
         } finally {
             try {
                 if (br != null) {
                     br.close();
                 }
             } catch (IOException ex) {
-                Timber.e(ex, "Exception thrown while closing an input stream due to: %s ", ex.getMessage());
+                Timber.e(ex, "MbtilesException thrown while closing an input stream due to: %s ", ex.getMessage());
             }
         }
 

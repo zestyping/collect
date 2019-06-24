@@ -202,7 +202,7 @@ public class EncryptionUtils {
                 md.update(elementSignatureSource.toString().getBytes(UTF_8));
                 messageDigest = md.digest();
             } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-                Timber.e(e, "Exception thrown while constructing md5 hash.");
+                Timber.e(e, "MbtilesException thrown while constructing md5 hash.");
                 throw new IllegalArgumentException(e.getMessage());
             }
 
