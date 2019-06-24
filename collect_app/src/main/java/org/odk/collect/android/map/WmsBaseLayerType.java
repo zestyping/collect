@@ -10,6 +10,8 @@ import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase;
 
 import java.io.File;
 
+import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
+
 public class WmsBaseLayerType implements BaseLayerType {
     private final String bltId;
     private final int nameId;
@@ -66,18 +68,19 @@ public class WmsBaseLayerType implements BaseLayerType {
     }
 
     @Override public MapFragment createMapFragment(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String referencePath = prefs.getString(KEY_REFERENCE_LAYER, null);
+        File referenceLayer = referencePath == null ? null : new File(referencePath);
+
         if (options.length > 1) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String value = prefs.getString(prefKey, null);
             for (int i = 0; i < options.length; i++) {
                 if (options[i].value.equals(value)) {
-                    return new OsmMapFragment(options[i].source);
+                    return new OsmMapFragment(options[i].source, referenceLayer);
                 }
             }
-            return null;
-        } else {
-            return new OsmMapFragment(options[0].source);
         }
+        return new OsmMapFragment(options[0].source, referenceLayer);
     }
 
     @Override public boolean supportsLayer(File path) {

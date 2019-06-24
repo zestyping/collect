@@ -36,13 +36,17 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.location.client.LocationClient;
 import org.odk.collect.android.location.client.LocationClients;
+import org.odk.collect.android.spatial.GoogleMapsMapBoxOfflineTileProvider;
 import org.odk.collect.android.utilities.IconUtils;
 import org.odk.collect.android.utilities.ToastUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,14 +84,17 @@ public class GoogleMapFragment extends SupportMapFragment implements
     protected AlertDialog gpsErrorDialog;
     protected boolean gpsLocationEnabled;
     protected final int mapType;
+    protected final File referenceLayer;
+    protected TileOverlay tileOverlay;
 
     // During Robolectric tests, Google Play Services is unavailable; sadly, the
     // "map" field will be null and many operations will need to be stubbed out.
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This flag is exposed for Robolectric tests to set")
     @VisibleForTesting public static boolean testMode;
 
-    public GoogleMapFragment(int mapType) {
+    public GoogleMapFragment(int mapType, File referenceLayer) {
         this.mapType = mapType;
+        this.referenceLayer = referenceLayer;
     }
 
     @Override public Fragment getFragment() {
@@ -108,6 +115,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
                 return;
             }
             this.map = map;
+            setReferenceLayer(referenceLayer);
             map.setMapType(mapType);
             map.setOnMapClickListener(this);
             map.setOnMapLongClickListener(this);
@@ -127,6 +135,18 @@ public class GoogleMapFragment extends SupportMapFragment implements
         // callback; we have to invoke the ready listener directly.
         if (testMode) {
             listener.onReady(this);
+        }
+    }
+
+    public void setReferenceLayer(File file) {
+        if (tileOverlay != null) {
+            tileOverlay.remove();
+            tileOverlay = null;
+        }
+        if (file != null) {
+            tileOverlay = this.map.addTileOverlay(new TileOverlayOptions().tileProvider(
+                new GoogleMapsMapBoxOfflineTileProvider(file)
+            ));
         }
     }
 

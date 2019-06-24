@@ -48,6 +48,7 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,9 +82,11 @@ public class OsmMapFragment extends Fragment implements MapFragment,
     protected boolean gpsLocationEnabled;
     protected IGeoPoint lastMapCenter;
     protected final ITileSource tiles;
+    protected File referenceLayer;
 
-    public OsmMapFragment(ITileSource tiles) {
+    public OsmMapFragment(ITileSource tiles, File referenceLayer) {
         this.tiles = tiles;
+        this.referenceLayer = referenceLayer;
     }
 
     @Override public Fragment getFragment() {
