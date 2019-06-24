@@ -17,7 +17,6 @@ package org.odk.collect.android.utilities;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
-import androidx.annotation.Nullable;
 import android.util.Base64;
 
 import org.apache.commons.io.IOUtils;
@@ -63,6 +62,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import androidx.annotation.Nullable;
 import timber.log.Timber;
 
 import static org.odk.collect.android.utilities.ApplicationConstants.Namespaces.XML_OPENROSA_NAMESPACE;
@@ -202,7 +202,7 @@ public class EncryptionUtils {
                 md.update(elementSignatureSource.toString().getBytes(UTF_8));
                 messageDigest = md.digest();
             } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-                Timber.e(e, "MbtilesException thrown while constructing md5 hash.");
+                Timber.e(e, "Exception thrown while constructing md5 hash.");
                 throw new IllegalArgumentException(e.getMessage());
             }
 

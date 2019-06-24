@@ -605,14 +605,14 @@ public class MainMenuActivity extends CollectAbstractActivity {
             Collect.getInstance().initProperties();
             res = true;
         } catch (IOException | ClassNotFoundException e) {
-            Timber.e(e, "MbtilesException while loading preferences from file due to : %s ", e.getMessage());
+            Timber.e(e, "Exception while loading preferences from file due to : %s ", e.getMessage());
         } finally {
             try {
                 if (input != null) {
                     input.close();
                 }
             } catch (IOException ex) {
-                Timber.e(ex, "MbtilesException thrown while closing an input stream due to: %s ", ex.getMessage());
+                Timber.e(ex, "Exception thrown while closing an input stream due to: %s ", ex.getMessage());
             }
         }
         return res;

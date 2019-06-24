@@ -29,8 +29,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -67,6 +65,8 @@ import java.util.Stack;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
 import timber.log.Timber;
 
 import static org.odk.collect.android.utilities.gdrive.GoogleAccountsManager.showSettingsDialog;
@@ -169,7 +169,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
             try {
                 dismissDialog(PROGRESS_DIALOG);
             } catch (Exception e) {
-                Timber.i("MbtilesException was thrown while dismissing a dialog.");
+                Timber.i("Exception was thrown while dismissing a dialog.");
             }
         }
         if (alertShowing) {
@@ -177,7 +177,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
                 dismissDialog(PROGRESS_DIALOG);
             } catch (Exception e) {
                 // don't care...
-                Timber.i("MbtilesException was thrown while dismissing a dialog.");
+                Timber.i("Exception was thrown while dismissing a dialog.");
             }
             createAlertDialog(alertMsg);
         }
@@ -501,7 +501,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
             dismissDialog(PROGRESS_DIALOG);
         } catch (Exception e) {
             // tried to close a dialog not open. don't care.
-            Timber.i("MbtilesException thrown due to closing a dialog that was not open");
+            Timber.i("Exception thrown due to closing a dialog that was not open");
         }
 
         StringBuilder sb = new StringBuilder();
@@ -713,7 +713,7 @@ public class GoogleDriveActivity extends FormListActivity implements View.OnClic
                         publishProgress(nextPage);
                     } catch (IOException e) {
                         if (!isCancelled()) {
-                            Timber.e(e, "MbtilesException thrown while accessing the file list");
+                            Timber.e(e, "Exception thrown while accessing the file list");
                         }
                     }
                 } while (request.getPageToken() != null && request.getPageToken().length() > 0);

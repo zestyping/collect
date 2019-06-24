@@ -166,7 +166,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
         try {
             loadExternalData(formMediaDir);
         } catch (Exception e) {
-            Timber.e(e, "MbtilesException thrown while loading external data");
+            Timber.e(e, "Exception thrown while loading external data");
             errorMsg = e.getMessage();
             return null;
         }
@@ -563,7 +563,7 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
 
             }
         } catch (IOException e) {
-            Timber.e(e, "MbtilesException thrown while reading csv file");
+            Timber.e(e, "Exception thrown while reading csv file");
         } finally {
             if (withinTransaction) {
                 ida.commit();

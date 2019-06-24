@@ -102,7 +102,7 @@ public class InstanceServerUploader extends InstanceUploader {
                     try {
                         contentLength = Long.parseLong(contentLengthString);
                     } catch (Exception e) {
-                        Timber.e(e, "MbtilesException thrown parsing contentLength %s", contentLengthString);
+                        Timber.e(e, "Exception thrown parsing contentLength %s", contentLengthString);
                     }
                 }
 
@@ -214,7 +214,7 @@ public class InstanceServerUploader extends InstanceUploader {
 
         } catch (Exception e) {
             saveFailedStatusToDatabase(instance);
-            throw new UploadException(FAIL + "Generic MbtilesException: "
+            throw new UploadException(FAIL + "Generic Exception: "
                     + (e.getMessage() != null ? e.getMessage() : e.toString()));
         }
 

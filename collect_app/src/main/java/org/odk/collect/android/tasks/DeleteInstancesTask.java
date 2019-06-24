@@ -63,7 +63,7 @@ public class DeleteInstancesTask extends AsyncTask<Long, Integer, Integer> {
                 publishProgress(successCount, toDeleteCount);
 
             } catch (Exception ex) {
-                Timber.e("MbtilesException during delete of: %s exception: %s", param.toString(), ex.toString());
+                Timber.e("Exception during delete of: %s exception: %s", param.toString(), ex.toString());
             }
         }
         successCount = deleted;

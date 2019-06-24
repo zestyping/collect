@@ -58,7 +58,7 @@ public class DeleteFormsTask extends AsyncTask<Long, Void, Integer> {
                 int wasDeleted = cr.delete(deleteForm, null, null);
                 deleted += wasDeleted;
             } catch (Exception ex) {
-                Timber.e("MbtilesException during delete of: %s exception: %s", param.toString(), ex.toString());
+                Timber.e("Exception during delete of: %s exception: %s", param.toString(), ex.toString());
             }
         }
         successCount = deleted;
