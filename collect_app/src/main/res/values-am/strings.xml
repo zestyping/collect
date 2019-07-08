@@ -208,6 +208,9 @@
   <string name="google_search_browse">ቅጾችን ይፈልጉ፡፡ ወይም ለማሰስ ከታች \"የእኔ Drive\" ን ይምረጡ.</string>
   <string name="about_preferences">ስለ</string>
   <!--Geo string added in feature-geofeatures branch-->
+  <string name="streets">መንገዶች</string>
+  <string name="terrain">መልከአ ምድር</string>
+  <string name="satellite">ሳተላይት</string>
   <string name="start">ይጀምሩ</string>
   <string name="enable_gps">GPSን አንቃ</string>
   <string name="clear">አጽዳ</string>

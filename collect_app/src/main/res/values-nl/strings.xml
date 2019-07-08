@@ -281,6 +281,8 @@
   <string name="leave_a_review">Schrijf een review op de Google Play Store.</string>
   <string name="leave_a_review_msg">Jouw (hopelijk positieve) review vergroot de zichtbaarheid van de Applicatie in de Play Store</string>
   <!--Geo string added in feature-geofeatures branch-->
+  <string name="streets">Straten</string>
+  <string name="terrain">Terrein</string>
   <string name="start">Start</string>
   <!--&lt; and &gt; surrounds the text so it will appear as <no form loaded>-->
   <string name="odk_website">Bezoek de ODK website</string>

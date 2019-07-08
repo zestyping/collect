@@ -185,6 +185,9 @@
   <string name="no_printer">প্রিন্টার নেই</string>
   <string name="constraint_behavior">constraint_behavior</string>
   <!--Geo string added in feature-geofeatures branch-->
+  <string name="terrain">ভূখণ্ড</string>
+  <string name="hybrid">হাইব্রিড</string>
+  <string name="satellite">উপগ্রহ</string>
   <string name="save_point">অবস্থান সংরক্ষণ</string>
   <string name="start">শুরু</string>
   <string name="enable_gps">GPS সক্ষম</string>

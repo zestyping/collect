@@ -287,6 +287,7 @@
   <string name="username_error_whitespace">Presledki na začetku ali na koncu uporabniškega imena niso dovoljeni</string>
   <string name="tell_your_friends_msg">Ali vaši kolegi še vedno zbirajo podatke na papirju? Delite ODK Collect z njimi.</string>
   <!--Geo string added in feature-geofeatures branch-->
+  <string name="satellite">Satelit</string>
   <string name="start">Začni</string>
   <string name="enable_gps">Omogoči GPS</string>
   <string name="gps_enable_message">GPS v napravi je onemogočen. Želite omogočiti?</string>
