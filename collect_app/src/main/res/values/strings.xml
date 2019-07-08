@@ -357,7 +357,7 @@
 
     <string name="reference_layer">Reference layer</string>
     <string name="layer_data">Layer data</string>
-    <string name="layer_data_dialog_title">Files in %s that work with the %s base layer:</string>
+    <string name="layer_data_dialog_title">Files in %1$s that work with the %2$s base layer:</string>
 
     <string name="save_point">Save GeoPoint</string>
     <string name="get_point">Start GeoPoint</string>
