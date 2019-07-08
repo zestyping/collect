@@ -307,7 +307,6 @@
   <string name="leave_a_review">اترك تعليق في Play Store</string>
   <string name="leave_a_review_msg">رأيك (نأمل إيجابيا) يزيد من رؤية التطبيق في Play Store.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">اخريطة لطرق</string>
   <string name="openmap_usgs_topo">خرطة البنية</string>
   <string name="openmap_usgs_sat">خريطة وطنية هجين USGS</string>
   <string name="openmap_usgs_img">صور الخريطة الوطنية USGS</string>

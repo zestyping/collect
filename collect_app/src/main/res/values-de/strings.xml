@@ -307,7 +307,6 @@
   <string name="leave_a_review">Geben Sie eine Play Store Bewertung ab</string>
   <string name="leave_a_review_msg">Ihre (hoffentlich positive) Bewertung steigert die Bekanntheit der App im Play Store.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">OSM Straßen</string>
   <string name="openmap_usgs_topo">USGS Topografische Karte</string>
   <string name="openmap_usgs_sat">USGS National Karte Hybrid</string>
   <string name="openmap_usgs_img">USGS National Karte Imagery</string>

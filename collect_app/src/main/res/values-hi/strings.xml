@@ -280,7 +280,6 @@
   <string name="google_play_services_error_occured">गूगल मानचित्र तक पहुंचने में असमर्थ क्या गूगल प्ले सर्विस इनस्टॉल है?</string>
   <string name="about_preferences">बारे में </string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">OSM स्ट्रीट</string>
   <string name="openmap_usgs_topo">USGS National Map Topo</string>
   <string name="openmap_stamen_terrain">स्टैमन टेरेन</string>
   <string name="openmap_cartodb_positron">CartoDB Positron</string>

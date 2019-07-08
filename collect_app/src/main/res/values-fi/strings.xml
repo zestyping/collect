@@ -307,7 +307,6 @@
   <string name="leave_a_review">Kirjoita Play Store -arvio</string>
   <string name="leave_a_review_msg">Sinun (toivottavasti myönteinen) arviosi lisää sovelluksen näkyvyyttä Play Store -kaupassa.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">OSM Streets</string>
   <string name="openmap_usgs_topo">USGS National Map topografinen</string>
   <string name="openmap_usgs_sat">USGS National Map hybridi</string>
   <string name="openmap_usgs_img">USGS National Map kuvat</string>

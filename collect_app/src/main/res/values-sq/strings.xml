@@ -272,7 +272,6 @@
   <string name="tell_your_friends_msg">Kolegët tuaj i mbledhin të dhënat me letër akoma? Ndaj ODK Collect me ta.</string>
   <string name="leave_a_review">Vlerëso në Play Store</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">Rrugë OSM</string>
   <string name="save_point">Ruaj vendndodhjen gjeografike</string>
   <string name="get_point">Regjistro vendndodhjen gjeografike</string>
   <string name="geopoint_view_read_only">Shih vendndodhjen gjeografike</string>

@@ -307,7 +307,6 @@
   <string name="leave_a_review">Play ストアにレビューを残す</string>
   <string name="leave_a_review_msg">あなたの (肯定的な) レビューが Play ストアでアプリの認知度を向上させてくれます</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">OSM 道路</string>
   <string name="openmap_usgs_topo">USGS National Map Topo</string>
   <string name="openmap_usgs_sat">USGS ナショナルマップ ハイブリッド</string>
   <string name="openmap_usgs_img">USGS ナショナルマップ画像</string>

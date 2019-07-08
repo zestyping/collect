@@ -307,7 +307,6 @@
   <string name="leave_a_review">Napiši Play Store recenziju</string>
   <string name="leave_a_review_msg">Vaša (nadamo se pozitivna) recenzija povećava vidljivost aplikacije u Play Storu.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">OSM ulice</string>
   <string name="openmap_usgs_topo">USGS National Map Topo</string>
   <string name="openmap_usgs_sat">USCG National Map Hybrid</string>
   <string name="openmap_usgs_img">USGC National Map Imagery</string>

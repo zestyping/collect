@@ -307,7 +307,6 @@
   <string name="leave_a_review">Залишити відгук в Play Store</string>
   <string name="leave_a_review_msg">Ваш (сподіваємось позитивний) відгук покращить помітність програми в Play Store.</string>
   <!--Geo string added in feature-geofeatures branch-->
-  <string name="openmap_streets">OSM Вулиці</string>
   <string name="openmap_usgs_topo">USGS топографічна національна карта</string>
   <string name="openmap_usgs_sat">USGS Національна мапа Гібрид</string>
   <string name="openmap_usgs_img">USGS Національна мапа Картинки</string>
