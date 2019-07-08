@@ -62,20 +62,20 @@ public final class GeneralKeys {
 
     // map_preferences.xml
     public static final String CATEGORY_BASE_LAYER          = "category_base_layer";
-    public static final String KEY_BASE_LAYER_TYPE          = "base_layer_type";
+    public static final String KEY_BASE_LAYER_SOURCE        = "base_layer_source";
     public static final String CATEGORY_REFERENCE_LAYER     = "category_reference_layer";
     public static final String KEY_REFERENCE_LAYER          = "reference_layer";
-    public static final String BASE_LAYER_TYPE_GOOGLE       = "base_layer_type_google";
-    public static final String BASE_LAYER_TYPE_MAPBOX       = "base_layer_type_mapbox";
-    public static final String BASE_LAYER_TYPE_OSM          = "base_layer_type_osm";
-    public static final String BASE_LAYER_TYPE_USGS         = "base_layer_type_usgs";
-    public static final String BASE_LAYER_TYPE_STAMEN       = "base_layer_type_stamen";
-    public static final String BASE_LAYER_TYPE_CARTO        = "base_layer_type_carto";
+    public static final String BASE_LAYER_SOURCE_GOOGLE     = "base_layer_source_google";
+    public static final String BASE_LAYER_SOURCE_MAPBOX     = "base_layer_source_mapbox";
+    public static final String BASE_LAYER_SOURCE_OSM        = "base_layer_source_osm";
+    public static final String BASE_LAYER_SOURCE_USGS       = "base_layer_source_usgs";
+    public static final String BASE_LAYER_SOURCE_STAMEN     = "base_layer_source_stamen";
+    public static final String BASE_LAYER_SOURCE_CARTO      = "base_layer_source_carto";
 
-    public static final String KEY_GOOGLE_MAP_STYLE        = "google_map_style";
-    public static final String KEY_MAPBOX_MAP_STYLE        = "mapbox_map_style";
-    public static final String KEY_USGS_MAP_STYLE          = "usgs_map_style";
-    public static final String KEY_CARTO_MAP_STYLE         = "carto_map_style";
+    public static final String KEY_GOOGLE_MAP_STYLE         = "google_map_style";
+    public static final String KEY_MAPBOX_MAP_STYLE         = "mapbox_map_style";
+    public static final String KEY_USGS_MAP_STYLE           = "usgs_map_style";
+    public static final String KEY_CARTO_MAP_STYLE          = "carto_map_style";
 
     // other keys
     public static final String KEY_LAST_VERSION             = "lastVersion";
@@ -154,7 +154,7 @@ public final class GeneralKeys {
         hashMap.put(KEY_SHOW_SPLASH,                false);
         hashMap.put(KEY_SPLASH_PATH,                Collect.getInstance().getString(R.string.default_splash_path));
         // map_preferences.xml
-        hashMap.put(KEY_BASE_LAYER_TYPE, BASE_LAYER_TYPE_GOOGLE);
+        hashMap.put(KEY_BASE_LAYER_SOURCE, BASE_LAYER_SOURCE_GOOGLE);
         return hashMap;
     }
 

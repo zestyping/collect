@@ -12,54 +12,39 @@ import java.io.File;
 
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 
-public class WmsMapFragmentProvider implements MapFragmentProvider {
-    private final String bltId;
-    private final int nameId;
+public class WmsBaseLayerSource implements BaseLayerSource {
     private final String prefKey;
     private final int prefTitleId;
     private final WmsOption[] options;
 
+    /**
     /** Constructs a base layer that provides just one Web Map Service. */
-    public WmsMapFragmentProvider(String bltId, int nameId, OnlineTileSourceBase source) {
-        this.bltId = bltId;
-        this.nameId = nameId;
+    public WmsBaseLayerSource(OnlineTileSourceBase source) {
         prefKey = "";
         prefTitleId = 0;
-        options = new WmsOption[] {new WmsOption(0, "", source)};
+        options = new WmsOption[] {new WmsOption("", 0, source)};
     }
 
     /**
      * Constructs a base layer that provides a few Web Map Services to choose from.
      * The choice of which Web Map Service will be stored in a string preference.
      */
-    public WmsMapFragmentProvider(
-        String bltId, int nameId,
-        String prefKey, int prefTitleId,
-        WmsOption... options
-    ) {
-        this.bltId = bltId;
-        this.nameId = nameId;
+    public WmsBaseLayerSource(String prefKey, int prefTitleId, WmsOption... options) {
         this.prefKey = prefKey;
         this.prefTitleId = prefTitleId;
         this.options = options;
     }
 
-    @Override public String getId() {
-        return bltId;
-    }
+    @Override public void onSelected() { }
 
-    @Override public int getNameResourceId() {
-        return nameId;
-    }
-
-    @Override public void addPreferences(PreferenceCategory category) {
+    @Override public void addPrefs(PreferenceCategory category) {
         if (options.length > 1) {
             int[] labelIds = new int[options.length];
             String[] values = new String[options.length];
             int i = 0;
             for (WmsOption option : options) {
                 labelIds[i] = option.labelId;
-                values[i] = option.value;
+                values[i] = option.id;
                 i++;
             }
             category.addPreference(PrefUtils.createListPref(
@@ -75,7 +60,7 @@ public class WmsMapFragmentProvider implements MapFragmentProvider {
         if (options.length > 1) {
             String value = prefs.getString(prefKey, null);
             for (int i = 0; i < options.length; i++) {
-                if (options[i].value.equals(value)) {
+                if (options[i].id.equals(value)) {
                     return new OsmMapFragment(options[i].source, referenceLayer);
                 }
             }
@@ -88,13 +73,13 @@ public class WmsMapFragmentProvider implements MapFragmentProvider {
     }
 
     public static class WmsOption {
-        int labelId;
-        String value;
-        OnlineTileSourceBase source;
+        final String id;
+        final int labelId;
+        final OnlineTileSourceBase source;
 
-        public WmsOption(int labelId, String value, OnlineTileSourceBase source) {
+        WmsOption(String id, int labelId, OnlineTileSourceBase source) {
+            this.id = id;
             this.labelId = labelId;
-            this.value = value;
             this.source = source;
         }
     }

@@ -97,7 +97,7 @@ public final class AdminKeys {
             ag(KEY_NAVIGATION,                 GeneralKeys.KEY_NAVIGATION),
             ag(KEY_CONSTRAINT_BEHAVIOR,        GeneralKeys.KEY_CONSTRAINT_BEHAVIOR),
 
-            ag(KEY_BASE_LAYER,                 GeneralKeys.KEY_BASE_LAYER_TYPE),
+            ag(KEY_BASE_LAYER,                 GeneralKeys.KEY_BASE_LAYER_SOURCE),
 
             ag(KEY_ANALYTICS,                  GeneralKeys.KEY_ANALYTICS)
     };

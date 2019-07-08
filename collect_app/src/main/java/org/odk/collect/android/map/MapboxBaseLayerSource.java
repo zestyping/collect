@@ -18,15 +18,7 @@ import timber.log.Timber;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_MAPBOX_MAP_STYLE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 
-public class MapboxMapFragmentProvider implements MapFragmentProvider {
-    @Override public String getId() {
-        return "mapbox";
-    }
-
-    @Override public int getNameResourceId() {
-        return R.string.base_layer_type_mapbox;
-    }
-
+public class MapboxBaseLayerSource implements BaseLayerSource {
     @Override public void onSelected() {
         // To keep our APK from getting too big, we decided to include the
         // Mapbox native library only for the most common binary architectures.
@@ -37,7 +29,7 @@ public class MapboxMapFragmentProvider implements MapFragmentProvider {
         }
     }
 
-    @Override public void addPreferences(PreferenceCategory category) {
+    @Override public void addPrefs(PreferenceCategory category) {
         category.addPreference(
             PrefUtils.createListPref(
                 category.getContext(),

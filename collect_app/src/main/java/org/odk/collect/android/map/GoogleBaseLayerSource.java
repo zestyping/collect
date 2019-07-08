@@ -18,16 +18,10 @@ import timber.log.Timber;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_GOOGLE_MAP_STYLE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 
-public class GoogleMapFragmentProvider implements MapFragmentProvider {
-    @Override public String getId() {
-        return "google";
-    }
+public class GoogleBaseLayerSource implements BaseLayerSource {
+    @Override public void onSelected() { }
 
-    @Override public int getNameResourceId() {
-        return R.string.base_layer_type_google;
-    }
-
-    @Override public void addPreferences(PreferenceCategory category) {
+    @Override public void addPrefs(PreferenceCategory category) {
         Context context = category.getContext();
         category.addPreference(
             PrefUtils.createListPref(

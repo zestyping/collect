@@ -24,7 +24,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import org.odk.collect.android.R;
-import org.odk.collect.android.map.BaseLayerTypeRegistry;
+import org.odk.collect.android.map.BaseLayerSourceRegistry;
 import org.odk.collect.android.map.GoogleMapFragment;
 import org.odk.collect.android.map.MapFragment;
 import org.odk.collect.android.map.MapPoint;
@@ -130,8 +130,7 @@ public class GeoPointMapActivity extends BaseGeoMapActivity implements IRegister
         zoomButton = findViewById(R.id.zoom);
 
         Context context = getApplicationContext();
-        BaseLayerTypeRegistry.getCurrent(context)
-            .createMapFragment(context)
+        BaseLayerSourceRegistry.createMapFragment(context)
             .addTo(this, R.id.map_container, this::initMap);
     }
 

@@ -22,8 +22,8 @@ import android.view.View;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
-import org.odk.collect.android.map.MapFragmentProvider;
-import org.odk.collect.android.map.BaseLayerTypeRegistry;
+import org.odk.collect.android.map.BaseLayerSource;
+import org.odk.collect.android.map.BaseLayerSourceRegistry;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,12 +33,12 @@ import androidx.annotation.Nullable;
 
 import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_BASE_LAYER;
 import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_REFERENCE_LAYER;
-import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_TYPE;
+import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_SOURCE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 import static org.odk.collect.android.preferences.PreferencesActivity.INTENT_KEY_ADMIN_MODE;
 
 public class MapsPreferences extends BasePreferenceFragment {
-    private ListPreference mBaseLayerTypePref;
+    private ListPreference mBaseLayerSourcePref;
     private ListPreference mReferenceLayerPref;
     private Context mContext;
 
@@ -57,7 +57,7 @@ public class MapsPreferences extends BasePreferenceFragment {
         addPreferencesFromResource(R.xml.maps_preferences);
 
         mContext = getPreferenceScreen().getContext();
-        initBaseLayerTypePref();
+        initBaseLayerSourcePref();
     }
 
     @Override
@@ -75,42 +75,42 @@ public class MapsPreferences extends BasePreferenceFragment {
     }
 
     /**
-     * Creates the Base Layer Type preference (but doesn't add it to the screen;
-     * onBaseLayerTypeChanged will do that part).
+     * Creates the Base Layer Source preference (but doesn't add it to the screen;
+     * onBaseLayerSourceChanged will do that part).
      */
-    private void initBaseLayerTypePref() {
-        mBaseLayerTypePref = PrefUtils.createListPref(
-            mContext, KEY_BASE_LAYER_TYPE, R.string.base_layer_type,
-            BaseLayerTypeRegistry.getNameResourceIds(), BaseLayerTypeRegistry.getIds()
+    private void initBaseLayerSourcePref() {
+        mBaseLayerSourcePref = PrefUtils.createListPref(
+            mContext, KEY_BASE_LAYER_SOURCE, R.string.base_layer_source,
+            BaseLayerSourceRegistry.getLabelIds(), BaseLayerSourceRegistry.getIds()
         );
-        onBaseLayerTypeChanged(null);
-        mBaseLayerTypePref.setOnPreferenceChangeListener((pref, value) -> {
-            onBaseLayerTypeChanged(value.toString());
+        onBaseLayerSourceChanged(null);
+        mBaseLayerSourcePref.setOnPreferenceChangeListener((pref, value) -> {
+            onBaseLayerSourceChanged(value.toString());
             return true;
         });
     }
 
-    /** Updates the rest of the preference UI when the Base Layer Type is changed. */
-    private void onBaseLayerTypeChanged(String bltId) {
-        MapFragmentProvider mapFragmentProvider = bltId == null ?
-            BaseLayerTypeRegistry.getCurrent(mContext) :
-            BaseLayerTypeRegistry.get(bltId);
-        mapFragmentProvider.onSelected();
+    /** Updates the rest of the preference UI when the Base Layer Source is changed. */
+    private void onBaseLayerSourceChanged(String id) {
+        BaseLayerSourceRegistry.Option option = id == null ?
+            BaseLayerSourceRegistry.getCurrent(mContext) :
+            BaseLayerSourceRegistry.get(id);
+        option.provider.onSelected();
 
         PreferenceCategory baseCategory = getCategory(CATEGORY_BASE_LAYER);
         baseCategory.removeAll();
-        baseCategory.addPreference(mBaseLayerTypePref);
-        mapFragmentProvider.addPreferences(baseCategory);
+        baseCategory.addPreference(mBaseLayerSourcePref);
+        option.provider.addPrefs(baseCategory);
 
         PreferenceCategory referenceCategory = getCategory(CATEGORY_REFERENCE_LAYER);
         referenceCategory.removeAll();
-        mReferenceLayerPref = createReferenceLayerPref(mContext, mapFragmentProvider);
+        mReferenceLayerPref = createReferenceLayerPref(mContext, option.labelId, option.provider);
         referenceCategory.addPreference(mReferenceLayerPref);
     }
 
-    /** Creates the Reference Layer preference for a given base layer type. */
-    public static ListPreference createReferenceLayerPref(Context context, MapFragmentProvider mapFragmentProvider) {
-        List<File> files = getSupportedLayerFiles(mapFragmentProvider);
+    /** Creates the Reference Layer preference for a given base layer source. */
+    public static ListPreference createReferenceLayerPref(Context context, int labelId, BaseLayerSource source) {
+        List<File> files = getSupportedLayerFiles(source);
         ListPreference pref = PrefUtils.createListPref(
             context, KEY_REFERENCE_LAYER, R.string.layer_data,
             toFilenameArray(files, context), toPathArray(files)
@@ -118,7 +118,7 @@ public class MapsPreferences extends BasePreferenceFragment {
         pref.setDialogTitle(
             context.getString(R.string.layer_data_dialog_title,
                 Collect.OFFLINE_LAYERS,
-                context.getString(mapFragmentProvider.getNameResourceId())
+                context.getString(labelId)
             )
         );
         return pref;
@@ -128,12 +128,12 @@ public class MapsPreferences extends BasePreferenceFragment {
         return (PreferenceCategory) findPreference(key);
     }
 
-    /** Gets the list of reference layer files supported by the current Base Layer Type. */
-    private static List<File> getSupportedLayerFiles(MapFragmentProvider blt) {
+    /** Gets the list of reference layer files supported by the current BaseLayerSource. */
+    private static List<File> getSupportedLayerFiles(BaseLayerSource source) {
         List<File> files = new ArrayList<>();
         files.add(null);  // the first option to show is always "None"; see null checks below
         for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
-            if (blt.supportsLayer(file)) {
+            if (source.supportsLayer(file)) {
                 files.add(file);
             }
         }
