@@ -198,6 +198,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
         return new Style.Builder().fromUrl(styleUrl);
     }
 
+    @SuppressWarnings("TimberExceptionLogging")
     private void addMbtiles(Style style, String id, File file) {
         MbtilesFile mbtiles;
         try {
