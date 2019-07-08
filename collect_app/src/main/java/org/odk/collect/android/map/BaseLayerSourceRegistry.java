@@ -15,7 +15,7 @@ import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_SOU
 public class BaseLayerSourceRegistry {
     private BaseLayerSourceRegistry() { }  // prevent instantiation
 
-    private static Option[] OPTIONS = initOptions();
+    private static final Option[] OPTIONS = initOptions();
 
     public static class Option {
         public final String id;  // preference value to store

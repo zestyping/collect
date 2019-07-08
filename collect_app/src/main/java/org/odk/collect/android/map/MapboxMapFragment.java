@@ -198,7 +198,6 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
         return new Style.Builder().fromUrl(styleUrl);
     }
 
-    @SuppressWarnings("TimberExceptionLogging")
     private void addMbtiles(Style style, String id, File file) {
         MbtilesFile mbtiles;
         try {
@@ -237,6 +236,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
         Timber.i("Added %s as a %s layer at /%s", file, mbtiles.getLayerType(), id);
     }
 
+    @SuppressWarnings("TimberExceptionLogging")
     private TileSet createTileSet(MbtilesFile mbtiles, String urlTemplate) {
         TileSet tileSet = new TileSet("2.2.0", urlTemplate);
 

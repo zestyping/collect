@@ -38,9 +38,8 @@ import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYE
 import static org.odk.collect.android.preferences.PreferencesActivity.INTENT_KEY_ADMIN_MODE;
 
 public class MapsPreferences extends BasePreferenceFragment {
-    private ListPreference mBaseLayerSourcePref;
-    private ListPreference mReferenceLayerPref;
-    private Context mContext;
+    private ListPreference baseLayerSourcePref;
+    private Context context;
 
     public static MapsPreferences newInstance(boolean adminMode) {
         Bundle bundle = new Bundle();
@@ -56,7 +55,7 @@ public class MapsPreferences extends BasePreferenceFragment {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.maps_preferences);
 
-        mContext = getPreferenceScreen().getContext();
+        context = getPreferenceScreen().getContext();
         initBaseLayerSourcePref();
     }
 
@@ -79,12 +78,12 @@ public class MapsPreferences extends BasePreferenceFragment {
      * onBaseLayerSourceChanged will do that part).
      */
     private void initBaseLayerSourcePref() {
-        mBaseLayerSourcePref = PrefUtils.createListPref(
-            mContext, KEY_BASE_LAYER_SOURCE, R.string.base_layer_source,
+        baseLayerSourcePref = PrefUtils.createListPref(
+            context, KEY_BASE_LAYER_SOURCE, R.string.base_layer_source,
             BaseLayerSourceRegistry.getLabelIds(), BaseLayerSourceRegistry.getIds()
         );
         onBaseLayerSourceChanged(null);
-        mBaseLayerSourcePref.setOnPreferenceChangeListener((pref, value) -> {
+        baseLayerSourcePref.setOnPreferenceChangeListener((pref, value) -> {
             onBaseLayerSourceChanged(value.toString());
             return true;
         });
@@ -93,19 +92,19 @@ public class MapsPreferences extends BasePreferenceFragment {
     /** Updates the rest of the preference UI when the Base Layer Source is changed. */
     private void onBaseLayerSourceChanged(String id) {
         BaseLayerSourceRegistry.Option option = id == null ?
-            BaseLayerSourceRegistry.getCurrent(mContext) :
+            BaseLayerSourceRegistry.getCurrent(context) :
             BaseLayerSourceRegistry.get(id);
         option.provider.onSelected();
 
         PreferenceCategory baseCategory = getCategory(CATEGORY_BASE_LAYER);
         baseCategory.removeAll();
-        baseCategory.addPreference(mBaseLayerSourcePref);
+        baseCategory.addPreference(baseLayerSourcePref);
         option.provider.addPrefs(baseCategory);
 
         PreferenceCategory referenceCategory = getCategory(CATEGORY_REFERENCE_LAYER);
         referenceCategory.removeAll();
-        mReferenceLayerPref = createReferenceLayerPref(mContext, option.labelId, option.provider);
-        referenceCategory.addPreference(mReferenceLayerPref);
+        referenceCategory.addPreference(
+            createReferenceLayerPref(context, option.labelId, option.provider));
     }
 
     /** Creates the Reference Layer preference for a given base layer source. */
