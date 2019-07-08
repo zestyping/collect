@@ -38,7 +38,7 @@ public class BaseLayerSourceRegistry {
             new Option("mapbox", R.string.base_layer_source_mapbox,
                 new MapboxBaseLayerSource()),
             new Option("osm", R.string.base_layer_source_osm,
-                new WmsBaseLayerSource(TileSourceFactory.MAPNIK)
+                new WmsBaseLayerSource(org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK)
             ),
             new Option("usgs", R.string.base_layer_source_usgs,
                 new WmsBaseLayerSource(

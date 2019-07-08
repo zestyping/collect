@@ -7,20 +7,6 @@ import java.io.File;
 
 import androidx.annotation.Nullable;
 
-// BaseLayerSourceRegistry, MapFragmentFactory, WmsMapFragmentFactory
-
-// BaseLayerSourceRegistry, BaseLayerSource, WmsBaseLayerSource
-// BaseLayerSourceRegistry, BaseMapProvider, WmsBaseMapProvider
-// BaseMapProviderRegistry, BaseMapProvider, WmsBaseMapProvider
-// BaseLayerSourceRegistry, BaseLayerSource, WmsBaseLayerSource
-// BaseLayerSourceRegistry, MapSource, WmsMapSource
-// MapSourceRegistry, MapSource, WmsMapSource
-// BaseLayerSourceRegistry, BaseMapSource, WmsBaseMapSource
-// BaseMapSourceRegistry, BaseMapSource, WmsBaseMapSource
-// MapBuilderRegistry, MapBuilder, WmsMapBuilder
-
-
-
 /**
  * Instances of this interface represent "Source" options available in the
  * "Base Layer" preferences.  Each BaseLayerSource can define its own
