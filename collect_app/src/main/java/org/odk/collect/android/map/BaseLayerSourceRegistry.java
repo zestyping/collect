@@ -3,6 +3,7 @@ package org.odk.collect.android.map;
 import android.content.Context;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.map.WmsBaseLayerSource.WmsOption;
 import org.odk.collect.android.preferences.GeneralKeys;
 import org.odk.collect.android.preferences.PrefUtils;
@@ -30,7 +31,7 @@ public class BaseLayerSourceRegistry {
 
     /** Defines the available base layer sources, in their order of appearance. */
     private static Option[] initOptions() {
-        TileSourceFactory factory = new TileSourceFactory();
+        TileSourceFactory factory = new TileSourceFactory(Collect.getInstance().getApplicationContext());
         return new Option[] {
             new Option("google", R.string.base_layer_source_google,
                 new GoogleBaseLayerSource()),

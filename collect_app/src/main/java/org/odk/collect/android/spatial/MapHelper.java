@@ -90,7 +90,7 @@ public class MapHelper {
         osmMap = null;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         offilineOverlays = getOfflineLayerList();
-        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory();
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
     }
 
     public MapHelper(Context context, GoogleMap googleMap, Integer selectedLayer) {
@@ -99,7 +99,7 @@ public class MapHelper {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         offilineOverlays = getOfflineLayerList();
         this.googleMap = googleMap;
-        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory();
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
         this.selectedLayer = selectedLayer == null ? 0 : selectedLayer;
     }
 
@@ -110,7 +110,7 @@ public class MapHelper {
         offilineOverlays = getOfflineLayerList();
         this.iregisterReceiver = iregisterReceiver;
         this.osmMap = osmMap;
-        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory();
+        tileFactory = new org.odk.collect.android.spatial.TileSourceFactory(context);
         this.selectedLayer = selectedLayer == null ? 0 : selectedLayer;
     }
 
