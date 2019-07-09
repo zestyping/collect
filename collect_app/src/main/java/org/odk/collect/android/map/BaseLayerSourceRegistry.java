@@ -12,6 +12,7 @@ import org.odk.collect.android.spatial.TileSourceFactory;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_SOURCE;
 
 /** A static class that defines the set of available base layer sources. */
+/** A static class that configures a MapFragment according to the user's preferences. */
 public class BaseLayerSourceRegistry {
     private BaseLayerSourceRegistry() { }  // prevent instantiation
 

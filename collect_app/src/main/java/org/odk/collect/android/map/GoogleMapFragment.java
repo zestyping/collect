@@ -84,7 +84,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
     protected AlertDialog gpsErrorDialog;
     protected boolean gpsLocationEnabled;
     protected final int mapType;
-    protected final File referenceLayer;
+    protected File referenceLayerFile;
     protected TileOverlay tileOverlay;
 
     // During Robolectric tests, Google Play Services is unavailable; sadly, the
@@ -92,9 +92,8 @@ public class GoogleMapFragment extends SupportMapFragment implements
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This flag is exposed for Robolectric tests to set")
     @VisibleForTesting public static boolean testMode;
 
-    public GoogleMapFragment(int mapType, File referenceLayer) {
+    public GoogleMapFragment(int mapType) {
         this.mapType = mapType;
-        this.referenceLayer = referenceLayer;
     }
 
     @Override public Fragment getFragment() {
@@ -115,7 +114,6 @@ public class GoogleMapFragment extends SupportMapFragment implements
                 return;
             }
             this.map = map;
-            setReferenceLayer(referenceLayer);
             map.setMapType(mapType);
             map.setOnMapClickListener(this);
             map.setOnMapLongClickListener(this);
@@ -126,6 +124,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
             map.setMyLocationEnabled(false);
             map.setMinZoomPreference(1);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(INITIAL_CENTER, INITIAL_ZOOM));
+            updateReferenceLayer();
             if (listener != null) {
                 listener.onReady(this);
             }
@@ -138,14 +137,22 @@ public class GoogleMapFragment extends SupportMapFragment implements
         }
     }
 
-    public void setReferenceLayer(File file) {
+    @Override public void setReferenceLayer(File file) {
+        referenceLayerFile = file;
+        if (map != null) {
+            updateReferenceLayer();
+        }
+    }
+
+    /** Updates the map to reflect the value of referenceLayerFile. */
+    protected void updateReferenceLayer() {
         if (tileOverlay != null) {
             tileOverlay.remove();
             tileOverlay = null;
         }
-        if (file != null) {
+        if (referenceLayerFile != null) {
             tileOverlay = this.map.addTileOverlay(new TileOverlayOptions().tileProvider(
-                new GoogleMapsMapBoxOfflineTileProvider(file)
+                new GoogleMapsMapBoxOfflineTileProvider(referenceLayerFile)
             ));
         }
     }
