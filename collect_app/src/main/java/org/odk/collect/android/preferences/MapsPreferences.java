@@ -32,7 +32,6 @@ import java.util.List;
 import androidx.annotation.Nullable;
 
 import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_BASE_LAYER;
-import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_REFERENCE_LAYER;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_SOURCE;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 import static org.odk.collect.android.preferences.PreferencesActivity.INTENT_KEY_ADMIN_MODE;
@@ -92,21 +91,21 @@ public class MapsPreferences extends BasePreferenceFragment {
     /** Updates the rest of the preference UI when the Base Layer Source is changed. */
     private void onBaseLayerSourceChanged(String id) {
         MapConfigurator.Option option = id == null ?
-            MapConfigurator.getCurrent(context) :
-            MapConfigurator.get(id);
-        if (!option.source.isAvailable(context)) {
-            option.source.showUnavailableMessage(context);
-        }
+            MapConfigurator.getCurrent(context) : MapConfigurator.get(id);
 
         PreferenceCategory baseCategory = getCategory(CATEGORY_BASE_LAYER);
         baseCategory.removeAll();
         baseCategory.addPreference(baseLayerSourcePref);
+        if (!option.source.isAvailable(context)) {
+            option.source.showUnavailableMessage(context);
+            return;
+        }
         option.source.addPrefs(baseCategory);
 
-        PreferenceCategory referenceCategory = getCategory(CATEGORY_REFERENCE_LAYER);
-        referenceCategory.removeAll();
-        referenceCategory.addPreference(
-            createReferenceLayerPref(context, option.labelId, option.source));
+        ReferenceLayerDialogPreference refLayer =
+            (ReferenceLayerDialogPreference) findPreference("reference_layer");
+        refLayer.setOption(option);
+        refLayer.setFiles(getSupportedLayerFiles(option.source));
     }
 
     /** Creates the Reference Layer preference for a given base layer source. */
@@ -132,7 +131,6 @@ public class MapsPreferences extends BasePreferenceFragment {
     /** Gets the list of reference layer files supported by the current BaseLayerSource. */
     private static List<File> getSupportedLayerFiles(BaseLayerSource source) {
         List<File> files = new ArrayList<>();
-        files.add(null);  // the first option to show is always "None"; see null checks below
         for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
             if (source.supportsLayer(file)) {
                 files.add(file);
