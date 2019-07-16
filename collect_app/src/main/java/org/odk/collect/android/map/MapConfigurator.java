@@ -91,7 +91,7 @@ public class MapConfigurator {
             return null;
         }
         String referencePath = PrefUtils.getSharedPrefs(context).getString(KEY_REFERENCE_LAYER, null);
-        map.setReferenceLayer(referencePath == null ? null : new File(referencePath));
+        map.setReferenceLayerFile(referencePath == null ? null : new File(referencePath));
         return map;
     }
 

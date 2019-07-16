@@ -158,7 +158,7 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
                 lineManager = createLineManager();
                 symbolManager = createSymbolManager();
 
-                updateReferenceLayer();
+                loadReferenceOverlay();
                 enableLocationComponent();
 
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(INITIAL_CENTER, INITIAL_ZOOM));
@@ -201,15 +201,15 @@ public class MapboxMapFragment extends MapFragment implements org.odk.collect.an
         return new Style.Builder().fromUrl(styleUrl);
     }
 
-    @Override public void setReferenceLayer(File file) {
+    @Override public void setReferenceLayerFile(File file) {
         referenceLayerFile = file;
         if (map != null) {
-            updateReferenceLayer();
+            loadReferenceOverlay();
         }
     }
 
     /** Updates the map to reflect the value of referenceLayerFile. */
-    private void updateReferenceLayer() {
+    private void loadReferenceOverlay() {
         clearOverlays();
         if (referenceLayerFile != null) {
             addMbtiles(referenceLayerFile.getName(), referenceLayerFile);

@@ -85,7 +85,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
     protected boolean gpsLocationEnabled;
     protected final int mapType;
     protected File referenceLayerFile;
-    protected TileOverlay tileOverlay;
+    protected TileOverlay referenceOverlay;
 
     // During Robolectric tests, Google Play Services is unavailable; sadly, the
     // "map" field will be null and many operations will need to be stubbed out.
@@ -129,7 +129,7 @@ public class GoogleMapFragment extends SupportMapFragment implements
             map.setMyLocationEnabled(false);
             map.setMinZoomPreference(1);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(INITIAL_CENTER, INITIAL_ZOOM));
-            updateReferenceLayer();
+            loadReferenceOverlay();
             if (readyListener != null) {
                 readyListener.onReady(this);
             }
@@ -142,21 +142,21 @@ public class GoogleMapFragment extends SupportMapFragment implements
         }
     }
 
-    @Override public void setReferenceLayer(File file) {
+    @Override public void setReferenceLayerFile(File file) {
         referenceLayerFile = file;
         if (map != null) {
-            updateReferenceLayer();
+            loadReferenceOverlay();
         }
     }
 
     /** Updates the map to reflect the value of referenceLayerFile. */
-    protected void updateReferenceLayer() {
-        if (tileOverlay != null) {
-            tileOverlay.remove();
-            tileOverlay = null;
+    protected void loadReferenceOverlay() {
+        if (referenceOverlay != null) {
+            referenceOverlay.remove();
+            referenceOverlay = null;
         }
         if (referenceLayerFile != null) {
-            tileOverlay = this.map.addTileOverlay(new TileOverlayOptions().tileProvider(
+            referenceOverlay = this.map.addTileOverlay(new TileOverlayOptions().tileProvider(
                 new GoogleMapsMapBoxOfflineTileProvider(referenceLayerFile)
             ));
         }

@@ -145,7 +145,7 @@ public class OsmMapFragment extends Fragment implements MapFragment,
         map.getController().setZoom(INITIAL_ZOOM);
         map.setTilesScaledToDpi(true);
         map.getOverlays().add(new MapEventsOverlay(this));
-        updateReferenceLayer();
+        loadReferenceOverlay();
         addMapLayoutChangeListener(map);
         myLocationOverlay = new MyLocationNewOverlay(map);
         myLocationOverlay.setDrawAccuracyEnabled(true);
@@ -161,15 +161,15 @@ public class OsmMapFragment extends Fragment implements MapFragment,
         return view;
     }
 
-    @Override public void setReferenceLayer(@Nullable File file) {
+    @Override public void setReferenceLayerFile(@Nullable File file) {
         referenceLayerFile = file;
         if (map != null) {
-            updateReferenceLayer();
+            loadReferenceOverlay();
         }
     }
 
     /** Updates the map to reflect the value of referenceLayerFile. */
-    protected void updateReferenceLayer() {
+    protected void loadReferenceOverlay() {
         if (referenceOverlay != null) {
             map.getOverlays().remove(referenceOverlay);
         }

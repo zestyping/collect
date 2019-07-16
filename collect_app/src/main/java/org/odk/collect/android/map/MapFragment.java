@@ -58,7 +58,7 @@ public interface MapFragment {
         @Nullable ReadyListener readyListener, @Nullable ErrorListener errorListener);
 
     /** Sets a file to be shown as a reference layer, or turns off the layer. */
-    void setReferenceLayer(@Nullable File file);
+    void setReferenceLayerFile(@Nullable File file);
 
     /** Gets the point currently shown at the center of the map view. */
     @NonNull MapPoint getCenter();
