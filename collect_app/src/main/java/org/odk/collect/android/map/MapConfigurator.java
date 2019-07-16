@@ -86,6 +86,10 @@ public class MapConfigurator {
             return null;
         }
         MapFragment map = option.source.createMapFragment(context);
+        if (map == null) {
+            option.source.showUnavailableMessage(context);
+            return null;
+        }
         String referencePath = PrefUtils.getSharedPrefs(context).getString(KEY_REFERENCE_LAYER, null);
         map.setReferenceLayer(referencePath == null ? null : new File(referencePath));
         return map;
