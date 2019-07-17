@@ -127,6 +127,7 @@ public class MapsPreferences extends BasePreferenceFragment {
                 String path = referenceLayerPref.getValue();
                 if (path != null && !option.source.supportsLayer(new File(path))) {
                     referenceLayerPref.setValue(null);
+                    updateReferenceLayerSummary(null);
                 }
             }
         }
