@@ -6,7 +6,7 @@
     <PreferenceCategory
         android:key="category_reference_layer"
         android:title="@string/reference_layer">
-        <org.odk.collect.android.preferences.ReferenceLayerDialogPreference
+        <org.odk.collect.android.preferences.CaptionedListPreference
             android:key="reference_layer"
             android:title="@string/layer_data"
             android:dialogTitle="@string/select_offline_layer"

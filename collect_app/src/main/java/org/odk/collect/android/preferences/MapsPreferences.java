@@ -33,12 +33,12 @@ import androidx.annotation.Nullable;
 
 import static org.odk.collect.android.preferences.GeneralKeys.CATEGORY_BASE_LAYER;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_BASE_LAYER_SOURCE;
-import static org.odk.collect.android.preferences.GeneralKeys.KEY_REFERENCE_LAYER;
 import static org.odk.collect.android.preferences.PreferencesActivity.INTENT_KEY_ADMIN_MODE;
 
 public class MapsPreferences extends BasePreferenceFragment {
-    private ListPreference baseLayerSourcePref;
     private Context context;
+    private ListPreference baseLayerSourcePref;
+    private CaptionedListPreference referenceLayerPref;
 
     public static MapsPreferences newInstance(boolean adminMode) {
         Bundle bundle = new Bundle();
@@ -49,23 +49,21 @@ public class MapsPreferences extends BasePreferenceFragment {
         return prefs;
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
+    @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.maps_preferences);
 
         context = getPreferenceScreen().getContext();
         initBaseLayerSourcePref();
+        initReferenceLayerPref();
     }
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         toolbar.setTitle(R.string.maps);
     }
 
-    @Override
-    public void onDetach() {
+    @Override public void onDetach() {
         super.onDetach();
         if (toolbar != null) {
             toolbar.setTitle(R.string.general_preferences);
@@ -73,8 +71,8 @@ public class MapsPreferences extends BasePreferenceFragment {
     }
 
     /**
-     * Creates the Base Layer Source preference (but doesn't add it to the screen;
-     * onBaseLayerSourceChanged will do that part).
+     * Creates the Base Layer Source preference widget (but doesn't add it to
+     * the screen; onBaseLayerSourceChanged will do that part).
      */
     private void initBaseLayerSourcePref() {
         baseLayerSourcePref = PrefUtils.createListPref(
@@ -88,47 +86,63 @@ public class MapsPreferences extends BasePreferenceFragment {
         });
     }
 
+    /** Sets up listeners for the Reference Layer preference widget. */
+    private void initReferenceLayerPref() {
+        referenceLayerPref = (CaptionedListPreference) findPreference("reference_layer");
+        referenceLayerPref.setOnPreferenceClickListener(preference -> {
+            populateReferenceLayerPref();
+            return false;
+        });
+        referenceLayerPref.setSummary(referenceLayerPref.getValue());
+        referenceLayerPref.setOnPreferenceChangeListener((preference, newValue) -> {
+            referenceLayerPref.setSummary(newValue.toString());
+            return true;
+        });
+    }
+
     /** Updates the rest of the preference UI when the Base Layer Source is changed. */
     private void onBaseLayerSourceChanged(String id) {
-        MapConfigurator.Option option = id == null ?
-            MapConfigurator.getCurrent(context) : MapConfigurator.get(id);
-
-        PreferenceCategory baseCategory = getCategory(CATEGORY_BASE_LAYER);
-        baseCategory.removeAll();
-        baseCategory.addPreference(baseLayerSourcePref);
-        if (!option.source.isAvailable(context)) {
-            option.source.showUnavailableMessage(context);
-            return;
+        MapConfigurator.Option option = id != null ? MapConfigurator.get(id)
+            : MapConfigurator.getCurrent(context);
+        if (option != null) {
+            PreferenceCategory baseCategory = (PreferenceCategory) findPreference(CATEGORY_BASE_LAYER);
+            baseCategory.removeAll();
+            baseCategory.addPreference(baseLayerSourcePref);
+            if (!option.source.isAvailable(context)) {
+                option.source.showUnavailableMessage(context);
+                return;
+            }
+            option.source.addPrefs(baseCategory);
         }
-        option.source.addPrefs(baseCategory);
-
-        ReferenceLayerDialogPreference refLayer =
-            (ReferenceLayerDialogPreference) findPreference("reference_layer");
-        refLayer.setOption(option);
-        refLayer.setFiles(getSupportedLayerFiles(option.source));
     }
 
-    /** Creates the Reference Layer preference for a given base layer source. */
-    public static ListPreference createReferenceLayerPref(Context context, int labelId, BaseLayerSource source) {
-        List<File> files = getSupportedLayerFiles(source);
-        ListPreference pref = PrefUtils.createListPref(
-            context, KEY_REFERENCE_LAYER, R.string.layer_data,
-            toFilenameArray(files, context), toPathArray(files)
-        );
-        pref.setDialogTitle(
-            context.getString(R.string.layer_data_dialog_title,
-                Collect.OFFLINE_LAYERS,
-                context.getString(labelId)
-            )
-        );
-        return pref;
+    /** Sets up the contents of the reference layer selection dialog. */
+    private void populateReferenceLayerPref() {
+        MapConfigurator.Option option = MapConfigurator.getCurrent(context);
+
+        List<File> files = getSupportedLayerFiles(option.source);
+        String[] values = new String[files.size() + 1];
+        String[] labels = new String[files.size() + 1];
+        String[] captions = new String[files.size() + 1];
+        values[0] = null;
+        labels[0] = getString(R.string.none);
+        captions[0] = "";
+        for (int i = 0; i < files.size(); i++) {
+            values[i + 1] = files.get(i).getAbsolutePath();
+            labels[i + 1] = option.source.getDisplayName(files.get(i));
+            captions[i + 1] = files.get(i).getAbsolutePath();
+        }
+        referenceLayerPref.setItems(values, labels, captions);
+
+        referenceLayerPref.setDialogCaption(context.getString(
+            files.isEmpty() ? R.string.layer_data_caption_none : R.string.layer_data_caption,
+            Collect.OFFLINE_LAYERS, context.getString(option.sourceLabelId)
+        ));
+
+        referenceLayerPref.updateContent();
     }
 
-    private PreferenceCategory getCategory(String key) {
-        return (PreferenceCategory) findPreference(key);
-    }
-
-    /** Gets the list of reference layer files supported by the current BaseLayerSource. */
+    /** Gets the list of layer data files supported by the current BaseLayerSource. */
     private static List<File> getSupportedLayerFiles(BaseLayerSource source) {
         List<File> files = new ArrayList<>();
         for (File file : new File(Collect.OFFLINE_LAYERS).listFiles()) {
@@ -137,23 +151,5 @@ public class MapsPreferences extends BasePreferenceFragment {
             }
         }
         return files;
-    }
-
-    private static String[] toFilenameArray(List<File> files, Context context) {
-        String[] filenames = new String[files.size()];
-        int i = 0;
-        for (File file : files) {
-            filenames[i++] = file == null ? context.getString(R.string.none) : file.getName();
-        }
-        return filenames;
-    }
-
-    private static String[] toPathArray(List<File> files) {
-        String[] paths = new String[files.size()];
-        int i = 0;
-        for (File file : files) {
-            paths[i++] = file == null ? "" : file.getAbsolutePath();
-        }
-        return paths;
     }
 }
