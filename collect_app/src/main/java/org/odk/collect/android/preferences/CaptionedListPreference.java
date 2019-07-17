@@ -23,7 +23,6 @@ public class CaptionedListPreference extends ListPreference {
     private CharSequence[] captions;
     private String dialogCaption;
 
-    private List<View> itemViews;
     private List<RadioButton> radioButtons;
     private ViewGroup listView;
     private TextView captionView;
@@ -73,13 +72,10 @@ public class CaptionedListPreference extends ListPreference {
 
         if (listView != null && values != null && labels != null && captions != null) {
             listView.removeAllViews();
-            itemViews = new ArrayList<>();
             radioButtons = new ArrayList<>();
             for (int i = 0; i < values.length; i++) {
-                View view = inflateItem(i, values[i], labels[i], captions[i]);
-                listView.addView(view);
-                itemViews.add(view);
-                radioButtons.add(view.findViewById(R.id.button));
+                RadioButton button = inflateItem(listView, i, values[i], labels[i], captions[i]);
+                radioButtons.add(button);
             }
         }
         if (captionView != null) {
@@ -87,7 +83,7 @@ public class CaptionedListPreference extends ListPreference {
         }
     }
 
-    protected View inflateItem(final int i, Object value, Object label, Object caption) {
+    protected RadioButton inflateItem(ViewGroup parent, final int i, Object value, Object label, Object caption) {
         LinearLayout item = (LinearLayout) LayoutInflater.from(context).inflate(R.layout.captioned_item, null);
         RadioButton button = item.findViewById(R.id.button);
         TextView labelView = item.findViewById(R.id.label);
@@ -96,22 +92,22 @@ public class CaptionedListPreference extends ListPreference {
         captionView.setText(String.valueOf(caption));
         button.setChecked(ObjectUtils.equals(value, getSharedPreferences().getString(getKey(), null)));
         item.setOnClickListener(view -> onItemClicked(i));
-        return item;
+        parent.addView(item);
+        return button;
     }
 
     protected void onItemClicked(int index) {
         clickedIndex = index;
-        for (int i = 0; i < itemViews.size(); i++) {
+        for (int i = 0; i < radioButtons.size(); i++) {
             radioButtons.get(i).setChecked(i == clickedIndex);
         }
     }
 
     protected void onDialogClosed(boolean positiveResult) {
-        super.onDialogClosed(positiveResult);
         if (positiveResult && clickedIndex >= 0) {
-            String value = getEntryValues()[clickedIndex].toString();
+            Object value = getEntryValues()[clickedIndex];
             if (callChangeListener(value)) {
-                setValue(value);
+                setValue(value != null ? value.toString() : null);
             }
         }
     }

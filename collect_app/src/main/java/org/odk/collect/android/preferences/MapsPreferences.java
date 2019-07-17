@@ -93,11 +93,18 @@ public class MapsPreferences extends BasePreferenceFragment {
             populateReferenceLayerPref();
             return false;
         });
-        referenceLayerPref.setSummary(referenceLayerPref.getValue());
+        updateReferenceLayerSummary(referenceLayerPref.getValue());
         referenceLayerPref.setOnPreferenceChangeListener((preference, newValue) -> {
-            referenceLayerPref.setSummary(newValue.toString());
+            updateReferenceLayerSummary(newValue);
             return true;
         });
+    }
+
+    private void updateReferenceLayerSummary(Object value) {
+        if (referenceLayerPref != null) {
+            referenceLayerPref.setSummary(
+                value != null ? value.toString() : getString(R.string.none));
+        }
     }
 
     /** Updates the rest of the preference UI when the Base Layer Source is changed. */
@@ -105,6 +112,7 @@ public class MapsPreferences extends BasePreferenceFragment {
         MapConfigurator.Option option = id != null ? MapConfigurator.get(id)
             : MapConfigurator.getCurrent(context);
         if (option != null) {
+            // Set up the prefences in the "Base Layer" section.
             PreferenceCategory baseCategory = (PreferenceCategory) findPreference(CATEGORY_BASE_LAYER);
             baseCategory.removeAll();
             baseCategory.addPreference(baseLayerSourcePref);
@@ -113,6 +121,14 @@ public class MapsPreferences extends BasePreferenceFragment {
                 return;
             }
             option.source.addPrefs(baseCategory);
+
+            // Clear the reference layer if it isn't supported by the new base layer.
+            if (referenceLayerPref != null) {
+                String path = referenceLayerPref.getValue();
+                if (path != null && !option.source.supportsLayer(new File(path))) {
+                    referenceLayerPref.setValue(null);
+                }
+            }
         }
     }
 
